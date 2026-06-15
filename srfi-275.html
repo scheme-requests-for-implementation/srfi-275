@@ -9,7 +9,15 @@ SPDX-License-Identifier: MIT
     <title>SRFI 275: URIs and IRIs</title>
     <link href="/favicon.png" rel="icon" sizes="192x192" type="image/png">
     <link rel="stylesheet" href="https://srfi.schemers.org/srfi.css" type="text/css">
-    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      dl.test-cases { margin-left: 2em; }
+      dl.test-cases dt { font-weight: bold; margin-top: 0.75em; }
+      dl.test-cases dd { margin-left: 1.5em; margin-bottom: 0; }
+      dl.test-cases dd .remark { display: block; font-style: italic; margin-top: 0.2em; }
+      dl.test-cases dd .components { display: block; margin-top: 0.2em; }
+    </style>
+  </head>
   <body>
     <h1><a href="https://srfi.schemers.org/"><img class="srfi-logo" src="https://srfi.schemers.org/srfi-logo.svg" alt="SRFI surfboard logo"></a>275: URIs and IRIs</h1>
 
@@ -372,206 +380,409 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 <p>In this section, we describe various test cases and the specific behaviour they evaluate. Because RFC 3986 and 3987 only provide examples for relative reference resolution, it is important to specify the exact behaviour of a correct implementation, especially with respect to normalisation. It is expected that these test cases could be the basis of a more comprehensive property-based test suite, e.g. test the entire range of reserved and unreserved characters in a particular URI component.</p>
 
 <h4>URI case normalisation test cases (<tt>normalise-uri-case</tt>)</h4>
-<table>
-  <tr>
-    <th>Synopsis</th>
-    <th>Input</th>
-    <th>Expected output</th>
-  </tr>
-  <tr><td>All lower-case preserved</td> <td><tt>&lt;http://example.org/ex#test&gt;</tt></td> <td><tt>&lt;http://example.org/ex#test&gt;</tt></td></tr>
-  <tr><td>Mixed-case scheme to lower-case</td> <td><tt>&lt;HttP://example.org/ex#test&gt;</tt></td> <td><tt>&lt;http://example.org/ex#test&gt;</tt></td></tr>
-  <tr><td>Mixed-case user preserved</td> <td><tt>&lt;http://MySelf@example.org/Examp#test&gt;</tt></td> <td><tt>&lt;http://MySelf@example.org/Examp#test&gt;</tt></td></tr>
-  <tr><td>Mixed-case host to lower-case</td> <td><tt>&lt;http://Example.ORG/ex#test&gt;</tt></td> <td><tt>&lt;http://example.org/ex#test&gt;</tt></td></tr>
-  <tr><td>Mixed case path preserved</td> <td><tt>&lt;http://example.org/Examp#test&gt;</tt></td> <td><tt>&lt;http://example.org/Examp#test&gt;</tt></td></tr>
-  <tr><td>Mixed case query preserved</td> <td><tt>&lt;http://example.org/examp?Qua#test&gt;</tt></td> <td><tt>&lt;http://example.org/examp?Qua#test&gt;</tt></td></tr>
-  <tr><td>Mixed case fragment preserved</td> <td><tt>&lt;http://example.org/examp#TeSt&gt;</tt></td> <td><tt>&lt;http://example.org/examp#TeSt&gt;</tt></td></tr>
-  <tr><td>User percent-encodings to upper-case</td> <td><tt>&lt;http://%aA@%AA%AB%AC%AD%AE/some/where/place&gt;</tt></td><td><tt>&lt;http://%AA@%AA%AB%AC%AD%AE/some/where/place&ht;</tt></td></tr>
-  <tr><td>Host percent-encodings to upper-case</td> <td><tt>&lt;http://%aa%Ab%AC%aD%AE/some/where/place&gt;</tt></td> <td><tt>&lt;http://%AA%AB%AC%AD%AE/some/where/place&gt;</tt></td></tr>
-  <tr><td>Path percent-encodings to upper-case</td> <td><tt>&lt;http://myname@example.org/%Fa/%FB/%fC&gt;</tt></td> <td><tt>&lt;http://myname@example.org/%FA/%FB/%FC&gt;</tt></td></tr>
-  <tr><td>Query percent-encodings to upper-case</td> <td><tt>&lt;http://myname@example.org/%FA/%FB/%FC?%ff&gt;</tt></td> <td><tt>&lt;http://myname@example.org/%FA/%FB/%FC?%FF&gt;</tt></td></tr>
-  <tr><td>Fragment percent-encodings to upper-case</td> <td><tt>&lt;http://myname@example.org/%FA/%FB/%FC#%ff&gt;</tt></td> <td><tt>&lt;http://myname@example.org/%FA/%FB/%FC#%FF&gt;</tt></td></tr>
-</table>
+<dl class="test-cases">
+  <dt>All lower-case preserved</dt>
+  <dd><tt>&lt;http://example.org/ex#test&gt;</tt>
+    &rarr; <tt>&lt;http://example.org/ex#test&gt;</tt></dd>
+  <dt>Mixed-case scheme to lower-case</dt>
+  <dd><tt>&lt;HttP://example.org/ex#test&gt;</tt>
+    &rarr; <tt>&lt;http://example.org/ex#test&gt;</tt></dd>
+  <dt>Mixed-case user preserved</dt>
+  <dd><tt>&lt;http://MySelf@example.org/Examp#test&gt;</tt>
+    &rarr; <tt>&lt;http://MySelf@example.org/Examp#test&gt;</tt></dd>
+  <dt>Mixed-case host to lower-case</dt>
+  <dd><tt>&lt;http://Example.ORG/ex#test&gt;</tt>
+    &rarr; <tt>&lt;http://example.org/ex#test&gt;</tt></dd>
+  <dt>Mixed case path preserved</dt>
+  <dd><tt>&lt;http://example.org/Examp#test&gt;</tt>
+    &rarr; <tt>&lt;http://example.org/Examp#test&gt;</tt></dd>
+  <dt>Mixed case query preserved</dt>
+  <dd><tt>&lt;http://example.org/examp?Qua#test&gt;</tt>
+    &rarr; <tt>&lt;http://example.org/examp?Qua#test&gt;</tt></dd>
+  <dt>Mixed case fragment preserved</dt>
+  <dd><tt>&lt;http://example.org/examp#TeSt&gt;</tt>
+    &rarr; <tt>&lt;http://example.org/examp#TeSt&gt;</tt></dd>
+  <dt>User percent-encodings to upper-case</dt>
+  <dd><tt>&lt;http://%aA@%AA%AB%AC%AD%AE/some/where/place&gt;</tt>
+    &rarr; <tt>&lt;http://%AA@%AA%AB%AC%AD%AE/some/where/place&gt;</tt></dd>
+  <dt>Host percent-encodings to upper-case</dt>
+  <dd><tt>&lt;http://%aa%Ab%AC%aD%AE/some/where/place&gt;</tt>
+    &rarr; <tt>&lt;http://%AA%AB%AC%AD%AE/some/where/place&gt;</tt></dd>
+  <dt>Path percent-encodings to upper-case</dt>
+  <dd><tt>&lt;http://myname@example.org/%Fa/%FB/%fC&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/%FA/%FB/%FC&gt;</tt></dd>
+  <dt>Query percent-encodings to upper-case</dt>
+  <dd><tt>&lt;http://myname@example.org/%FA/%FB/%FC?%ff&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/%FA/%FB/%FC?%FF&gt;</tt></dd>
+  <dt>Fragment percent-encodings to upper-case</dt>
+  <dd><tt>&lt;http://myname@example.org/%FA/%FB/%FC#%ff&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/%FA/%FB/%FC#%FF&gt;</tt></dd>
+</dl>
 
 <h4>IRI case normalisation test cases (<tt>normalise-iri-case</tt>)</h4>
-<table>
-  <tr>
-    <th>Synopsis</th>
-    <th>Input</th>
-    <th>Expected output</th>
-    <th>Remarks</th>
-  </tr>
-  <tr><td>Host non-U.S. ASCII is case-sensitive</td> <td><tt>&lt;http://CRÊPES.example.org&gt;</tt></td> <td><tt>&lt;http://crÊpes.example.org&gt;</tt></td><td>No equivalent for scheme as that only contains ASCII even in IRIs</td></tr>
-</table>
+<dl class="test-cases">
+  <dt>Host non-U.S. ASCII is case-sensitive</dt>
+  <dd><tt>&lt;http://CRÊPES.example.org&gt;</tt>
+    &rarr; <tt>&lt;http://crÊpes.example.org&gt;</tt>
+    <span class="remark">No equivalent for scheme as that only contains ASCII even in IRIs</span></dd>
+</dl>
 
 <h4>URI escape (percent-encoding) normalisation test cases (<tt>normalise-uri-escape</tt>)</h4>
-<table>
-  <tr>
-    <th>Synopsis</th>
-    <th>Input</th>
-    <th>Expected output</th>
-  </tr>
-  <tr><td>User reserved character not escaped</td> <td><tt>&lt;http://my!name@example.org/ex#test&gt;</tt></td> <td><tt>&lt;http://my!name@example.org/ex#test&gt;</tt></td></tr>
-  <tr><td>Host reserved character not escaped</td> <td><tt>&lt;http://myname@!example.org/ex#test&gt;</tt></td> <td><tt>&lt;http://myname@!example.org/ex#test&gt;</tt></td></tr>
-  <tr><td>Path reserved character not escaped</td> <td><tt>&lt;http://myname@example.org/ex!#test&gt;</tt></td> <td><tt>&lt;http://myname@example.org/ex!#test&gt;</tt></td></tr>
-  <tr><td>Query reserved character not escaped</td> <td><tt>&lt;http://myname@example.org/ex?!a#test&gt;</tt></td> <td><tt>&lt;http://myname@example.org/ex?!a#test&gt;</tt></td></tr>
-  <tr><td>Fragment reserved character not escaped</td> <td><tt>&lt;http://myname@example.org/ex?a#!test&gt;</tt></td> <td><tt>&lt;http://myname@example.org/ex?a#!test&gt;</tt></td></tr>
-  <tr><td>User reserved escape not decoded</td> <td><tt>&lt;http://my%40name@example.org/ex#test&gt;</tt></td> <td><tt>&lt;http://my%40name@example.org/ex#test&gt;</tt></td></tr>
-  <tr><td>Host reserved escape not decoded</td> <td><tt>&lt;http://myname@ex%40ample.org/ex#test&gt;</tt></td> <td><tt>&lt;http://myname@ex%40ample.org/ex#test&gt;</tt></td></tr>
-  <tr><td>Path reserved escape not decoded</td> <td><tt>&lt;http://myname@example.org/e%40x#test&gt;</tt></td> <td><tt>&lt;http://myname@example.org/e%40x#test&gt;</tt></td></tr>
-  <tr><td>Query reserved escape not decoded</td> <td><tt>&lt;http://myname@example.org/ex?a%40#test&gt;</tt></td> <td><tt>&lt;http://myname@example.org/ex?a%40#test&gt;</tt></td></tr>
-  <tr><td>Fragment reserved escape not decoded</td> <td><tt>&lt;http://myname@example.org/ex?a#t%40est&gt;</tt></td> <td><tt>&lt;http://myname@example.org/ex?a#t%40est&gt;</tt></td></tr>
-  <tr><td>User permissible escape decoded</td> <td><tt>&lt;http://my%2Ename@example.org/ex?a#test&gt;</tt></td> <td><tt>&lt;http://my.name@example.org/ex?a#test&gt;</tt></td></tr>
-  <tr><td>Host permissible escape decoded</td> <td><tt>&lt;http://myname@example%2Eorg/ex?a#test&gt;</tt></td> <td><tt>&lt;http://myname@example.org/ex?a#test&gt;</tt></td></tr>
-  <tr><td>Path permissible escape decoded</td> <td><tt>&lt;http://myname@example.org/misc%2Etxt#test&gt;</tt></td> <td><tt>&lt;http://myname@example.org/misc.txt#test&gt;</tt></td></tr>
-  <tr><td>Query permissible escape decoded</td> <td><tt>&lt;http://myname@example.org/misc.txt?%2E%2E%2E&gt;</tt></td> <td><tt>&lt;http://myname@example.org/misc.txt?...&gt;</tt></td></tr>
-  <tr><td>Fragment permissible escape decoded</td> <td><tt>&lt;http://myname@example.org/misc.txt#line%31%30&gt;</tt></td> <td><tt>&lt;http://myname@example.org/misc.txt#line10&gt;</tt></td></tr>
-  <tr><td>User illegal characters are escaped</td> <td><tt>&lt;http://dosh£@crepes.example.org&gt;</tt></td> <td><tt>&lt;http://dosh%C2%A3@crepes.example.org&gt;</tt></td></tr>
-  <tr><td>Host illegal characters are escaped</td> <td><tt>&lt;http://crêpes.example.org&gt;</tt></td> <td><tt>&lt;http://cr%C3%AApes.example.org&gt;</tt></td></tr>
-  <tr><td>Path illegal characters are escaped</td> <td><tt>&lt;http://crepes.example.org/in/Rhône&gt;</tt></td> <td><tt>&lt;http://crepes.example.org/in/Rh%C3%B4ne&gt;</tt></td></tr>
-  <tr><td>Query illegal characters are escaped</td> <td><tt>&lt;http://crepes.example.org/in/Rennes?Dim.‥Sam.&gt;</tt></td> <td><tt>&lt;http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam.&gt;</tt></td></tr>
-  <tr><td>Fragment illegal characters are escaped</td> <td><tt>&lt;http://crepes.example.org/in/Rennes#L'Étage&gt;</tt></td> <td><tt>&lt;http://crepes.example.org/in/Rennes#L'%C3%89tage&gt;</tt></td></tr>
-</table>
+<dl class="test-cases">
+  <dt>User reserved character not escaped</dt>
+  <dd><tt>&lt;http://my!name@example.org/ex#test&gt;</tt>
+    &rarr; <tt>&lt;http://my!name@example.org/ex#test&gt;</tt></dd>
+  <dt>Host reserved character not escaped</dt>
+  <dd><tt>&lt;http://myname@!example.org/ex#test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@!example.org/ex#test&gt;</tt></dd>
+  <dt>Path reserved character not escaped</dt>
+  <dd><tt>&lt;http://myname@example.org/ex!#test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/ex!#test&gt;</tt></dd>
+  <dt>Query reserved character not escaped</dt>
+  <dd><tt>&lt;http://myname@example.org/ex?!a#test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/ex?!a#test&gt;</tt></dd>
+  <dt>Fragment reserved character not escaped</dt>
+  <dd><tt>&lt;http://myname@example.org/ex?a#!test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/ex?a#!test&gt;</tt></dd>
+  <dt>User reserved escape not decoded</dt>
+  <dd><tt>&lt;http://my%40name@example.org/ex#test&gt;</tt>
+    &rarr; <tt>&lt;http://my%40name@example.org/ex#test&gt;</tt></dd>
+  <dt>Host reserved escape not decoded</dt>
+  <dd><tt>&lt;http://myname@ex%40ample.org/ex#test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@ex%40ample.org/ex#test&gt;</tt></dd>
+  <dt>Path reserved escape not decoded</dt>
+  <dd><tt>&lt;http://myname@example.org/e%40x#test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/e%40x#test&gt;</tt></dd>
+  <dt>Query reserved escape not decoded</dt>
+  <dd><tt>&lt;http://myname@example.org/ex?a%40#test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/ex?a%40#test&gt;</tt></dd>
+  <dt>Fragment reserved escape not decoded</dt>
+  <dd><tt>&lt;http://myname@example.org/ex?a#t%40est&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/ex?a#t%40est&gt;</tt></dd>
+  <dt>User permissible escape decoded</dt>
+  <dd><tt>&lt;http://my%2Ename@example.org/ex?a#test&gt;</tt>
+    &rarr; <tt>&lt;http://my.name@example.org/ex?a#test&gt;</tt></dd>
+  <dt>Host permissible escape decoded</dt>
+  <dd><tt>&lt;http://myname@example%2Eorg/ex?a#test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/ex?a#test&gt;</tt></dd>
+  <dt>Path permissible escape decoded</dt>
+  <dd><tt>&lt;http://myname@example.org/misc%2Etxt#test&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/misc.txt#test&gt;</tt></dd>
+  <dt>Query permissible escape decoded</dt>
+  <dd><tt>&lt;http://myname@example.org/misc.txt?%2E%2E%2E&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/misc.txt?...&gt;</tt></dd>
+  <dt>Fragment permissible escape decoded</dt>
+  <dd><tt>&lt;http://myname@example.org/misc.txt#line%31%30&gt;</tt>
+    &rarr; <tt>&lt;http://myname@example.org/misc.txt#line10&gt;</tt></dd>
+  <dt>User illegal characters are escaped</dt>
+  <dd><tt>&lt;http://dosh£@crepes.example.org&gt;</tt>
+    &rarr; <tt>&lt;http://dosh%C2%A3@crepes.example.org&gt;</tt></dd>
+  <dt>Host illegal characters are escaped</dt>
+  <dd><tt>&lt;http://crêpes.example.org&gt;</tt>
+    &rarr; <tt>&lt;http://cr%C3%AApes.example.org&gt;</tt></dd>
+  <dt>Path illegal characters are escaped</dt>
+  <dd><tt>&lt;http://crepes.example.org/in/Rhône&gt;</tt>
+    &rarr; <tt>&lt;http://crepes.example.org/in/Rh%C3%B4ne&gt;</tt></dd>
+  <dt>Query illegal characters are escaped</dt>
+  <dd><tt>&lt;http://crepes.example.org/in/Rennes?Dim.‥Sam.&gt;</tt>
+    &rarr; <tt>&lt;http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam.&gt;</tt></dd>
+  <dt>Fragment illegal characters are escaped</dt>
+  <dd><tt>&lt;http://crepes.example.org/in/Rennes#L'Étage&gt;</tt>
+    &rarr; <tt>&lt;http://crepes.example.org/in/Rennes#L'%C3%89tage&gt;</tt></dd>
+</dl>
 
 <h4>IRI escape normalisation test cases (<tt>normalise-iri-escape</tt>)</h4>
-<table>
-  <tr>
-    <th>Synopsis</th>
-    <th>Input</th>
-    <th>Expected output</th>
-    <th>Remarks</th>
-  </tr>
-  <tr><td>User permissible escape decoded</td> <td><tt>&lt;http://dosh%C2%A3@crepes.example.org&gt;</tt></td> <td><tt>&lt;http://dosh£@crepes.example.org&gt;</tt></td><td></td></tr>
-  <tr><td>Host permissible escape decoded</td> <td><tt>&lt;http://cr%C3%AApes.example.org&gt;</tt></td> <td><tt>&lt;http://crêpes.example.org&gt;</tt></td><td></td></tr>
-  <tr><td>Path illegal characters are escaped</td> <td><tt>&lt;http://crepes.example.org/in/Rh%C3%B4ne&gt;</tt></td> <td><tt>&lt;http://crepes.example.org/in/Rhône&gt;</tt></td><td></td></tr>
-  <tr><td>Query illegal characters are escaped</td> <td><tt>&lt;http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam.&gt;</tt></td> <td><tt>&lt;http://crepes.example.org/in/Rennes?Dim.‥Sam.&gt;</tt></td><td></td></tr>
-  <tr><td>Fragment illegal characters are escaped</td> <td><tt>&lt;http://crepes.example.org/in/Rennes#L'%C3%89tage&gt;</tt></td> <td><tt>&lt;http://crepes.example.org/in/Rennes#L'Étage&gt;</tt></td><td></td></tr>
-  <tr><td>Wholly escaped wholly decoded</td> <td><tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt></td> <td><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></td><td></td></tr>
-  <tr><td>Partially normalised wholly decoded</td> <td><tt>&lt;https://example.org/music/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt></td> <td><tt>&lt;https://example.org/music/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt></td><td></td></tr>
-  <tr><td>Wholly normalised not reencoded</td> <td><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></td> <td><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></td><td></td></tr>
-  <tr><td>Repeated normalisation (indepondence)</td> <td><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></td> <td><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></td><td>In this test case, <tt>normalise-iri-escape</tt> should be called multiple times, i.e. <tt>(compose normalise-iri-escape normalise-iri-escape)</tt></td></tr>
-</table>
+<dl class="test-cases">
+  <dt>User permissible escape decoded</dt>
+  <dd><tt>&lt;http://dosh%C2%A3@crepes.example.org&gt;</tt>
+    &rarr; <tt>&lt;http://dosh£@crepes.example.org&gt;</tt></dd>
+  <dt>Host permissible escape decoded</dt>
+  <dd><tt>&lt;http://cr%C3%AApes.example.org&gt;</tt>
+    &rarr; <tt>&lt;http://crêpes.example.org&gt;</tt></dd>
+  <dt>Path illegal characters are escaped</dt>
+  <dd><tt>&lt;http://crepes.example.org/in/Rh%C3%B4ne&gt;</tt>
+    &rarr; <tt>&lt;http://crepes.example.org/in/Rhône&gt;</tt></dd>
+  <dt>Query illegal characters are escaped</dt>
+  <dd><tt>&lt;http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam.&gt;</tt>
+    &rarr; <tt>&lt;http://crepes.example.org/in/Rennes?Dim.‥Sam.&gt;</tt></dd>
+  <dt>Fragment illegal characters are escaped</dt>
+  <dd><tt>&lt;http://crepes.example.org/in/Rennes#L'%C3%89tage&gt;</tt>
+    &rarr; <tt>&lt;http://crepes.example.org/in/Rennes#L'Étage&gt;</tt></dd>
+  <dt>Wholly escaped wholly decoded</dt>
+  <dd><tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt>
+    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></dd>
+  <dt>Partially normalised wholly decoded</dt>
+  <dd><tt>&lt;https://example.org/music/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt>
+    &rarr; <tt>&lt;https://example.org/music/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt></dd>
+  <dt>Wholly normalised not reencoded</dt>
+  <dd><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
+    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></dd>
+  <dt>Repeated normalisation (indepondence)</dt>
+  <dd><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
+    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
+    <span class="remark">In this test case, <tt>normalise-iri-escape</tt> should be called multiple times, i.e. <tt>(compose normalise-iri-escape normalise-iri-escape)</tt></span></dd>
+</dl>
 
 <h4>Path normalisation test cases (<tt>normalise-uri-path-segments</tt> and <tt>normalise-iri-path-segments</tt>)</h4>
-<table>
-  <tr>
-    <th>Synopsis</th>
-    <th>Input</th>
-    <th>Expected output</th>
-    <th>Remarks</th>
-  </tr>
-  <tr><td>Absolute path without dotted segments unchanged</td> <td><tt>&lt;http://example.org/some/where/place&gt;</tt></td> <td><tt>&lt;http://example.org/some/where/place&gt;</tt></td><td></td></tr>
-  <tr><td>No authority absolute path without dotted segments unchanged</td> <td><tt>&lt;urn:/some/where/place&gt;</tt></td> <td><tt>&lt;urn:/some/where/place&gt;</tt></td><td></td></tr>
-  <tr><td>Relative path without dotted segments unchanged</td> <td><tt>&lt;urn:some/where/place&gt;</tt></td> <td><tt>&lt;urn:some/where/place&gt;</tt></td><td></td></tr>
-  <tr><td>Absolute path eliminates single dotted segments</td> <td><tt>&lt;urn:/some/./where/././place/./&gt;</tt></td> <td><tt>&lt;urn:/some/where/place/&gt;</tt></td><td></td></tr>
-  <tr><td>Relative path eliminates single dotted segments</td> <td><tt>&lt;urn:some/./where/././place/./&gt;</tt></td> <td><tt>&lt;urn:some/where/place/&gt;</tt></td><td></td></tr>
-  <tr><td>Absolute path empty segments treated like non-empty</td> <td><tt>&lt;urn:/some//where//place//&gt;</tt></td> <td><tt>&lt;urn:/some//where//place//&gt;</tt></td><td></td></tr>
-  <tr><td>Relative path empty segments treated like non-empty</td> <td><tt>&lt;urn:some//where//place//&gt;</tt></td> <td><tt>&lt;urn:some//where//place//&gt;</tt></td><td></td></tr>
-  <tr><td>Single leading slash not normalised</td> <td><tt>&lt;/&gt;</tt></td> <td><tt>&lt;/&gt;</tt></td><td></td></tr>
-  <tr><td>Multiple leading slashes not normalised</td> <td><tt>&lt;//&gt;</tt></td> <td><tt>&lt;//&gt;</tt></td><td></td></tr>
-  <tr><td>Absolute path reference not normalised (double-dot)</td> <td><tt>&lt;/a/b/../../c&gt;</tt></td> <td><tt>&lt;/a/b/../../c&gt;</tt></td><td></td></tr>
-  <tr><td>Absolute path reference not normalised (single-dot)</td> <td><tt>&lt;/a/b/././c&gt;</tt></td> <td><tt>&lt;/a/b/././c&gt;</tt></td><td></td></tr>
-  <tr><td>Absolute path reference not normalised (mixed dotted)</td> <td><tt>&lt;/a/b/../c/././d&gt;</tt></td> <td><tt>&lt;/a/b/../c/././d&gt;</tt></td><td></td></tr>
-  <tr><td>Relative path reference not normalised (double-dot)</td> <td><tt>&lt;a/b/../../c&gt;</tt></td> <td><tt>&lt;a/b/../../c&gt;</tt></td><td></td></tr>
-  <tr><td>Relative path reference not normalised (single-dot)</td> <td><tt>&lt;a/b/././c&gt;</tt></td> <td><tt>&lt;a/b/././c&gt;</tt></td><td></td></tr>
-  <tr><td>Relative path reference not normalised (mixed dotted)</td> <td><tt>&lt;a/b/../c/././d&gt;</tt></td> <td><tt>&lt;a/b/../c/././d&gt;</tt></td><td></td></tr>
-  <tr><td>1-segment path reference with leading dot not normalised</td> <td><tt>&lt;./def&gt;</tt></td> <td><tt>&lt;./def&gt;</tt></td><td></td></tr>
-  <tr><td>1-segment path reference with leading dot not normalised (colon)</td> <td><tt>&lt;./abc:def&gt;</tt></td> <td><tt>&lt;./abc:def&gt;</tt></td><td></td></tr>
-  <tr><td>Additional relative path case not normalised</td> <td><tt>&lt;../../abc/./def&gt;</tt></td> <td><tt>&lt;../../abc/./def&gt;</tt></td><td></td></tr>
-  <tr><td>Relative path must not be normalised to an absolute path</td> <td><tt>&lt;foo:a/b/../.././../../e&gt;</tt></td> <td><tt>&lt;foo:e&gt;</tt></td><td>From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></td></tr>
-  <tr><td>Empty segments eliminated like non-empty (1)</td> <td><tt>&lt;http://example.com////../..&gt;</tt></td> <td><tt>&lt;http://example.com//&gt;</tt></td><td>From Webkit <a href="#webkit">[5]</a></td></tr>
-  <tr><td>Empty segments eliminated like non-empty (2)</td> <td><tt>&lt;http://example.com/foo/bar//../..&gt;</tt></td> <td><tt>&lt;http://example.com/foo/&gt;</tt></td><td>From Webkit <a href="#webkit">[5]</a></td></tr>
-  <tr><td>Empty segments eliminated like non-empty (3)</td> <td><tt>&lt;http://example.com/foo/bar//..&gt;</tt></td> <td><tt>&lt;http://example.com/foo/bar/&gt;</tt></td><td>From Webkit <a href="#webkit">[5]</a></td></tr>
-  <tr><td>General test case 1</td> <td><tt>&lt;http://example/a/b/../../c&gt;</tt></td> <td><tt>&lt;http://example/c&gt;</tt></td><td>From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></td></tr>
-  <tr><td>General test case 2</td> <td><tt>&lt;http://example/a/b/c/../../&gt;</tt></td> <td><tt>&lt;http://example/a/&gt;</tt></td><td>From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></td></tr>
-  <tr><td>General test case 3</td> <td><tt>&lt;http://example/a/b/c/./&gt;</tt></td> <td><tt>&lt;http://example/a/b/c/&gt;</tt></td><td>From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></td></tr>
-  <tr><td>General test case 4</td> <td><tt>&lt;http://example/a/b/c/.././&gt;</tt></td> <td><tt>&lt;http://example/a/b/&gt;</tt></td><td>From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></td></tr>
-  <tr><td>General test case 5</td> <td><tt>&lt;http://example/a/b/c/d/../../../../e&gt;</tt></td> <td><tt>&lt;http://example/e&gt;</tt></td><td>From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></td></tr>
-  <tr><td>General test case 6</td> <td><tt>&lt;http://example/a/b/c/d/../.././../../e&gt;</tt></td> <td><tt>&lt;http://example/e&gt;</tt></td><td>From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></td></tr>
-  <tr><td>General test case 7</td> <td><tt>&lt;http://example/a/b/../.././../../e&gt;</tt></td> <td><tt>&lt;http://example/e&gt;</tt></td><td>From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></td></tr>
-</table>
+<dl class="test-cases">
+  <dt>Absolute path without dotted segments unchanged</dt>
+  <dd><tt>&lt;http://example.org/some/where/place&gt;</tt>
+    &rarr; <tt>&lt;http://example.org/some/where/place&gt;</tt></dd>
+  <dt>No authority absolute path without dotted segments unchanged</dt>
+  <dd><tt>&lt;urn:/some/where/place&gt;</tt>
+    &rarr; <tt>&lt;urn:/some/where/place&gt;</tt></dd>
+  <dt>Relative path without dotted segments unchanged</dt>
+  <dd><tt>&lt;urn:some/where/place&gt;</tt>
+    &rarr; <tt>&lt;urn:some/where/place&gt;</tt></dd>
+  <dt>Absolute path eliminates single dotted segments</dt>
+  <dd><tt>&lt;urn:/some/./where/././place/./&gt;</tt>
+    &rarr; <tt>&lt;urn:/some/where/place/&gt;</tt></dd>
+  <dt>Relative path eliminates single dotted segments</dt>
+  <dd><tt>&lt;urn:some/./where/././place/./&gt;</tt>
+    &rarr; <tt>&lt;urn:some/where/place/&gt;</tt></dd>
+  <dt>Absolute path empty segments treated like non-empty</dt>
+  <dd><tt>&lt;urn:/some//where//place//&gt;</tt>
+    &rarr; <tt>&lt;urn:/some//where//place//&gt;</tt></dd>
+  <dt>Relative path empty segments treated like non-empty</dt>
+  <dd><tt>&lt;urn:some//where//place//&gt;</tt>
+    &rarr; <tt>&lt;urn:some//where//place//&gt;</tt></dd>
+  <dt>Single leading slash not normalised</dt>
+  <dd><tt>&lt;/&gt;</tt>
+    &rarr; <tt>&lt;/&gt;</tt></dd>
+  <dt>Multiple leading slashes not normalised</dt>
+  <dd><tt>&lt;//&gt;</tt>
+    &rarr; <tt>&lt;//&gt;</tt></dd>
+  <dt>Absolute path reference not normalised (double-dot)</dt>
+  <dd><tt>&lt;/a/b/../../c&gt;</tt>
+    &rarr; <tt>&lt;/a/b/../../c&gt;</tt></dd>
+  <dt>Absolute path reference not normalised (single-dot)</dt>
+  <dd><tt>&lt;/a/b/././c&gt;</tt>
+    &rarr; <tt>&lt;/a/b/././c&gt;</tt></dd>
+  <dt>Absolute path reference not normalised (mixed dotted)</dt>
+  <dd><tt>&lt;/a/b/../c/././d&gt;</tt>
+    &rarr; <tt>&lt;/a/b/../c/././d&gt;</tt></dd>
+  <dt>Relative path reference not normalised (double-dot)</dt>
+  <dd><tt>&lt;a/b/../../c&gt;</tt>
+    &rarr; <tt>&lt;a/b/../../c&gt;</tt></dd>
+  <dt>Relative path reference not normalised (single-dot)</dt>
+  <dd><tt>&lt;a/b/././c&gt;</tt>
+    &rarr; <tt>&lt;a/b/././c&gt;</tt></dd>
+  <dt>Relative path reference not normalised (mixed dotted)</dt>
+  <dd><tt>&lt;a/b/../c/././d&gt;</tt>
+    &rarr; <tt>&lt;a/b/../c/././d&gt;</tt></dd>
+  <dt>1-segment path reference with leading dot not normalised</dt>
+  <dd><tt>&lt;./def&gt;</tt>
+    &rarr; <tt>&lt;./def&gt;</tt></dd>
+  <dt>1-segment path reference with leading dot not normalised (colon)</dt>
+  <dd><tt>&lt;./abc:def&gt;</tt>
+    &rarr; <tt>&lt;./abc:def&gt;</tt></dd>
+  <dt>Additional relative path case not normalised</dt>
+  <dd><tt>&lt;../../abc/./def&gt;</tt>
+    &rarr; <tt>&lt;../../abc/./def&gt;</tt></dd>
+  <dt>Relative path must not be normalised to an absolute path</dt>
+  <dd><tt>&lt;foo:a/b/../.././../../e&gt;</tt>
+    &rarr; <tt>&lt;foo:e&gt;</tt>
+    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dt>Empty segments eliminated like non-empty (1)</dt>
+  <dd><tt>&lt;http://example.com////../..&gt;</tt>
+    &rarr; <tt>&lt;http://example.com//&gt;</tt>
+    <span class="remark">From Webkit <a href="#webkit">[5]</a></span></dd>
+  <dt>Empty segments eliminated like non-empty (2)</dt>
+  <dd><tt>&lt;http://example.com/foo/bar//../..&gt;</tt>
+    &rarr; <tt>&lt;http://example.com/foo/&gt;</tt>
+    <span class="remark">From Webkit <a href="#webkit">[5]</a></span></dd>
+  <dt>Empty segments eliminated like non-empty (3)</dt>
+  <dd><tt>&lt;http://example.com/foo/bar//..&gt;</tt>
+    &rarr; <tt>&lt;http://example.com/foo/bar/&gt;</tt>
+    <span class="remark">From Webkit <a href="#webkit">[5]</a></span></dd>
+  <dt>General test case 1</dt>
+  <dd><tt>&lt;http://example/a/b/../../c&gt;</tt>
+    &rarr; <tt>&lt;http://example/c&gt;</tt>
+    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dt>General test case 2</dt>
+  <dd><tt>&lt;http://example/a/b/c/../../&gt;</tt>
+    &rarr; <tt>&lt;http://example/a/&gt;</tt>
+    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dt>General test case 3</dt>
+  <dd><tt>&lt;http://example/a/b/c/./&gt;</tt>
+    &rarr; <tt>&lt;http://example/a/b/c/&gt;</tt>
+    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dt>General test case 4</dt>
+  <dd><tt>&lt;http://example/a/b/c/.././&gt;</tt>
+    &rarr; <tt>&lt;http://example/a/b/&gt;</tt>
+    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dt>General test case 5</dt>
+  <dd><tt>&lt;http://example/a/b/c/d/../../../../e&gt;</tt>
+    &rarr; <tt>&lt;http://example/e&gt;</tt>
+    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dt>General test case 6</dt>
+  <dd><tt>&lt;http://example/a/b/c/d/../.././../../e&gt;</tt>
+    &rarr; <tt>&lt;http://example/e&gt;</tt>
+    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dt>General test case 7</dt>
+  <dd><tt>&lt;http://example/a/b/../.././../../e&gt;</tt>
+    &rarr; <tt>&lt;http://example/e&gt;</tt>
+    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+</dl>
 
 <h4>URI to IRI conversion (<tt>uri->iri</tt>)</h4>
-<table>
-  <tr>
-    <th>Synopsis</th>
-    <th>Input</th>
-    <th>Expected output</th>
-  </tr>
-  <tr><td>Wholly escaped path normalised</td> <td><tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt></td> <td><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></td><td></td></tr>
-  <tr><td>Partially escaped path normalised</td> <td><tt>&lt;https://example.org/ceol/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt></td> <td><tt>&lt;https://example.org/ceol/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt></td><td></td></tr>
-</table>
+<dl class="test-cases">
+  <dt>Wholly escaped path normalised</dt>
+  <dd><tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt>
+    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></dd>
+  <dt>Partially escaped path normalised</dt>
+  <dd><tt>&lt;https://example.org/ceol/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt>
+    &rarr; <tt>&lt;https://example.org/ceol/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt></dd>
+</dl>
 
 <h4>IRI to URI conversion (<tt>iri->uri</tt>)</h4>
-<table>
-  <tr>
-    <th>Synopsis</th>
-    <th>Input</th>
-    <th>Expected output</th>
-  </tr>
-  <tr><td>Wholly escaped path normalised</td> <td><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></td> <td><tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt></td><td></td></tr>
-  <tr><td>Partially escapable path escaped</td> <td><tt>&lt;https://example.org/ceol/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt></td> <td><tt>&lt;https://example.org/ceol/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt></td><td></td></tr>
-</table>
+<dl class="test-cases">
+  <dt>Wholly escaped path normalised</dt>
+  <dd><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
+    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt></dd>
+  <dt>Partially escapable path escaped</dt>
+  <dd><tt>&lt;https://example.org/ceol/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt>
+    &rarr; <tt>&lt;https://example.org/ceol/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt></dd>
+</dl>
 
 <h4>Parsing expected segments</h4>
-<table>
-  <tr>
-    <th>Synopsis</th>
-    <th>Input</th>
-    <th>Expected scheme</th>
-    <th>Expected user</th>
-    <th>Expected host</th>
-    <th>Expected port</th>
-    <th>Expected path</th>
-    <th>Expected query</th>
-    <th>Expected fragment</th>
-  </tr>
-  <tr><td>Empty URI</td><td><tt>&lt;&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Empty authority</td><td><tt>&lt;//&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Empty authority</td><td><tt>&lt;//&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Empty user</td><td><tt>&lt;//@&gt;</tt></td><td><b>N/A</b></td><td>""</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Empty port</td><td><tt>&lt;//:&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Empty query</td><td><tt>&lt;?&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td></tr>
-  <tr><td>Empty fragment</td><td><tt>&lt;#&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>""</td></tr>
-  <tr><td>Path which looks like a hostname</td><td><tt>&lt;example.org&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>"example.org"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>URN-like</td><td><tt>&lt;urn:something&gt;</tt></td><td>"urn"</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>"something"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>URN-like, path looks like hostname</td><td><tt>&lt;urn:example.org&gt;</tt></td><td>"urn"</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>"example.org"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Path which looks like a URN</td><td><tt>&lt;./urn:something&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>"./urn:something"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>User with colon segment</td><td><tt>&lt;http://a:b@c:29&gt;</tt></td><td>"http"</td><td>"a:b"</td><td>"c"</td><td>29</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>User-like component appears as path</td><td><tt>&lt;http::@c:29&gt;</tt></td><td>"http"</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>":@c:29"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Host-like component appears as user</td><td><tt>&lt;http://example.org:b@d/&gt;</tt></td><td>"http"</td><td>"example.org:b"</td><td>"d"</td><td><tt>#f</tt></td><td>"/"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Padded port as numeric value</td><td><tt>&lt;http://example.org:000080&gt;</tt></td><td>"http"</td><td><tt>#f</tt></td><td>"example.org"</td><td>80</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Query component with question mark</td><td><tt>&lt;http://example.org/abcd?efgh?ijkl&gt;</tt></td><td>"http"</td><td><tt>#f</tt></td><td>"example.org"</td><td><tt>#f</tt></td><td>"/abcd"</td><td>"efgh?ijkl"</td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Fragment component with question mark</td><td><tt>&lt;http://example.org/abcd#efgh?ijkl&gt;</tt></td><td>"http"</td><td><tt>#f</tt></td><td>"example.org"</td><td><tt>#f</tt></td><td>"/abcd"</td><td><tt>#f</tt></td><td>"efgh?ijkl"</td></tr></tr>
-  <tr><td>Path where first segment looks like host</td><td><tt>&lt;http:///some/where/place&gt;</tt></td><td>"http"</td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td>"/some/where/place"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Scheme with nil host</td><td><tt>&lt;foo:&gt;</tt></td><td>"foo"</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Scheme with path, empty host</td><td><tt>&lt;foo:////g&gt;</tt></td><td>"foo"</td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td>"//g"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Scheme with path, nil host</td><td><tt>&lt;foo:.///g&gt;</tt></td><td>"foo"</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>".///g"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>Scheme with non-empty host</td><td><tt>&lt;foo://g&gt;</tt></td><td>"foo"</td><td><tt>#f</tt></td><td>"g"</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr></tr>
-  <tr><td>All components filled out</td><td><tt>&lt;http://user@example.org:80/some/where/place?qua#ought&gt;</tt></td><td>"http"</td><td>"user"</td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>All components except user filled out</td><td><tt>&lt;http://example.org:80/some/where/place?qua#ought&gt;</tt></td><td>"http"</td><td><tt>#f</tt></td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>All components except host filled out</td><td><tt>&lt;http://user@:80/some/where/place?qua#ought&gt;</tt></td><td>"http"</td><td>"user"</td><td><tt>#f</tt></td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>All components except port filled out</td><td><tt>&lt;http://user@example.org/some/where/place?qua#ought&gt;</tt></td><td>"http"</td><td>"user"</td><td>"example.org"</td><td><tt>#f</tt></td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>All components except path filled out</td><td><tt>&lt;http://user@example.org:80?qua#ought&gt;</tt></td><td>"http"</td><td>"user"</td><td>"example.org"</td><td>80</td><td><tt>#f</tt></td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>All components except query filled out</td><td><tt>&lt;http://user@example.org:80/some/where/place#ought&gt;</tt></td><td>"http"</td><td>"user"</td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td><tt>#f</tt></td><td>"ought"</td></tr>
-  <tr><td>All components except fragment filled out</td><td><tt>&lt;http://user@example.org:80/some/where/place?qua&gt;</tt></td><td>"http"</td><td>"user"</td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td><tt>#f</tt></td></tr>
-  <tr><td>Empty host, nil user/port</td><td><tt>&lt;http:///some/where/place?qua#ought&gt;</tt></td><td>"http"</td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr></tr>
-  <tr><td>Empty user, nil host/port</td><td><tt>&lt;http://@/some/where/place?qua#ought&gt;</tt></td><td>"http"</td><td>""</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>"/some/where/place"</td><td>"qua"</td>"<td>"ought"</td></tr></tr>
-  <tr><td>Empty port implies empty host</td><td><tt>&lt;http://:/some/where/place?qua#ought&gt;</tt></td><td>"http"</td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr></tr>
-  <tr><td>Relative reference, nil host</td><td><tt>&lt;////g&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td>"//g"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Relative reference, path, nil host</td><td><tt>&lt;.///g&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>".///g"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Relative reference, non-empty host</td><td><tt>&lt;//g&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td>"g"</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Path which looks like a query</td><td><tt>&lt;./p=q:r&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>"./p=q:r"</td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr><td>Relative reference, all components filled out</td><td><tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt></td><td><b>N/A</b></td><td>"user"</td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>Relative reference, all components except user filled out</td><td><tt>&lt;//example.org:80/some/where/place?qua#ought&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>Relative reference, all components except host filled out</td><td><tt>&lt;//user@:80/some/where/place?qua#ought&gt;</tt></td><td><b>N/A</b></td><td>"user"</td><td><tt>#f</tt></td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>Relative reference, all components except port filled out</td><td><tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt></td><td><b>N/A</b></td><td>"user"</td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>Relative reference, all components except path filled out</td><td><tt>&lt;//user@example.org:80?qua#ought&gt;</tt></td><td><b>N/A</b></td><td>"user"</td><td>"example.org"</td><td>80</td><td><tt>#f</tt></td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>Relative reference, all components except query filled out</td><td><tt>&lt;//user@example.org:80/some/where/place#ought&gt;</tt></td><td><b>N/A</b></td><td>"user"</td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td><tt>#f</tt></td><td>"ought"</td></tr>
-  <tr><td>Relative reference, all components except fragment filled out</td><td><tt>&lt;//user@example.org:80/some/where/place?qua&gt;</tt></td><td><b>N/A</b></td><td>"user"</td><td>"example.org"</td><td>80</td><td>"/some/where/place"</td><td>"qua"</td><td><tt>#f</tt></td></tr>
-  <tr><td>Relative reference empty host, nil user/port</td><td><tt>&lt;///some/where/place?qua#ought&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>Relative reference empty user, nil host/port</td><td><tt>&lt;//@/some/where/place?qua#ought&gt;</tt></td><td><b>N/A</b></td><td>""</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-  <tr><td>Relative reference empty port implies empty host</td><td><tt>&lt;//:/some/where/place?qua#ought&gt;</tt></td><td><b>N/A</b></td><td><tt>#f</tt></td><td>""</td><td><tt>#f</tt></td><td>"/some/where/place"</td><td>"qua"</td><td>"ought"</td></tr>
-</table>
+<dl class="test-cases">
+  <dt>Empty URI</dt>
+  <dd><tt>&lt;&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Empty authority</dt>
+  <dd><tt>&lt;//&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Empty user</dt>
+  <dd><tt>&lt;//@&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>""</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Empty port</dt>
+  <dd><tt>&lt;//:&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Empty query</dt>
+  <dd><tt>&lt;?&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>""</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Empty fragment</dt>
+  <dd><tt>&lt;#&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>""</tt></span></dd>
+  <dt>Path which looks like a hostname</dt>
+  <dd><tt>&lt;example.org&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"example.org"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>URN-like</dt>
+  <dd><tt>&lt;urn:something&gt;</tt>
+    <span class="components">scheme: <tt>"urn"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"something"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>URN-like, path looks like hostname</dt>
+  <dd><tt>&lt;urn:example.org&gt;</tt>
+    <span class="components">scheme: <tt>"urn"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"example.org"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Path which looks like a URN</dt>
+  <dd><tt>&lt;./urn:something&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"./urn:something"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>User with colon segment</dt>
+  <dd><tt>&lt;http://a:b@c:29&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"a:b"</tt>, host: <tt>"c"</tt>, port: <tt>29</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>User-like component appears as path</dt>
+  <dd><tt>&lt;http::@c:29&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>":@c:29"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Host-like component appears as user</dt>
+  <dd><tt>&lt;http://example.org:b@d/&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"example.org:b"</tt>, host: <tt>"d"</tt>, port: <tt>#f</tt>, path: <tt>"/"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Padded port as numeric value</dt>
+  <dd><tt>&lt;http://example.org:000080&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Query component with question mark</dt>
+  <dd><tt>&lt;http://example.org/abcd?efgh?ijkl&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>#f</tt>, path: <tt>"/abcd"</tt>, query: <tt>"efgh?ijkl"</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Fragment component with question mark</dt>
+  <dd><tt>&lt;http://example.org/abcd#efgh?ijkl&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>#f</tt>, path: <tt>"/abcd"</tt>, query: <tt>#f</tt>, fragment: <tt>"efgh?ijkl"</tt></span></dd>
+  <dt>Path where first segment looks like host</dt>
+  <dd><tt>&lt;http:///some/where/place&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Scheme with nil host</dt>
+  <dd><tt>&lt;foo:&gt;</tt>
+    <span class="components">scheme: <tt>"foo"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Scheme with path, empty host</dt>
+  <dd><tt>&lt;foo:////g&gt;</tt>
+    <span class="components">scheme: <tt>"foo"</tt>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"//g"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Scheme with path, nil host</dt>
+  <dd><tt>&lt;foo:.///g&gt;</tt>
+    <span class="components">scheme: <tt>"foo"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>".///g"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Scheme with non-empty host</dt>
+  <dd><tt>&lt;foo://g&gt;</tt>
+    <span class="components">scheme: <tt>"foo"</tt>, user: <tt>#f</tt>, host: <tt>"g"</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>All components filled out</dt>
+  <dd><tt>&lt;http://user@example.org:80/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>All components except user filled out</dt>
+  <dd><tt>&lt;http://example.org:80/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>All components except host filled out</dt>
+  <dd><tt>&lt;http://user@:80/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>#f</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>All components except port filled out</dt>
+  <dd><tt>&lt;http://user@example.org/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>All components except path filled out</dt>
+  <dd><tt>&lt;http://user@example.org:80?qua#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>#f</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>All components except query filled out</dt>
+  <dd><tt>&lt;http://user@example.org:80/some/where/place#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>#f</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>All components except fragment filled out</dt>
+  <dd><tt>&lt;http://user@example.org:80/some/where/place?qua&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Empty host, nil user/port</dt>
+  <dd><tt>&lt;http:///some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Empty user, nil host/port</dt>
+  <dd><tt>&lt;http://@/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>""</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Empty port implies empty host</dt>
+  <dd><tt>&lt;http://:/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference, nil host</dt>
+  <dd><tt>&lt;////g&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"//g"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Relative reference, path, nil host</dt>
+  <dd><tt>&lt;.///g&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>".///g"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Relative reference, non-empty host</dt>
+  <dd><tt>&lt;//g&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>"g"</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Path which looks like a query</dt>
+  <dd><tt>&lt;./p=q:r&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"./p=q:r"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Relative reference, all components filled out</dt>
+  <dd><tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference, all components except user filled out</dt>
+  <dd><tt>&lt;//example.org:80/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference, all components except host filled out</dt>
+  <dd><tt>&lt;//user@:80/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>#f</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference, all components except port filled out</dt>
+  <dd><tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference, all components except path filled out</dt>
+  <dd><tt>&lt;//user@example.org:80?qua#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>#f</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference, all components except query filled out</dt>
+  <dd><tt>&lt;//user@example.org:80/some/where/place#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>#f</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference, all components except fragment filled out</dt>
+  <dd><tt>&lt;//user@example.org:80/some/where/place?qua&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>#f</tt></span></dd>
+  <dt>Relative reference empty host, nil user/port</dt>
+  <dd><tt>&lt;///some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference empty user, nil host/port</dt>
+  <dd><tt>&lt;//@/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>""</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+  <dt>Relative reference empty port implies empty host</dt>
+  <dd><tt>&lt;//:/some/where/place?qua#ought&gt;</tt>
+    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
+</dl>
 
 <h2 id="implementation">Implementation</h2>
 
