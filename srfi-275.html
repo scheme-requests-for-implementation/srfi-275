@@ -16,10 +16,11 @@ SPDX-License-Identifier: MIT
       dl.test-cases dd { margin-left: 1.5em; margin-bottom: 0; overflow-x: auto; }
       dl.test-cases dd .remark { display: block; font-style: italic; margin-top: 0.2em; }
       dl.test-cases dd .components { display: block; margin-top: 0.2em; }
+      .overflow-x { overflow-x: auto; }
       table.parsing-segments { margin-left: 2em; border-collapse: collapse; }
       table.parsing-segments th, table.parsing-segments td { padding: 0.2em 0.4em; text-align: left; }
       table.parsing-segments tr.case-label td { padding-top: 0.5em; font-weight: bold; }
-      .overflow-x { overflow-x: auto; }
+      ul#references { list-style-type: none; }
     </style>
   </head>
   <body>
@@ -104,7 +105,7 @@ The editor will add this section.</p>
 <h4>Path segment normalisation</h4>
 <p>Path segment normalisation is structurally identical for both URIs and IRIs. It interprets an entire path with respect to two control sequences: <tt>.</tt> (current working directory) and <tt>..</tt> (upper working directory), similar to UNIX paths. Unlike the other two normalisation procedures, path segment normalisation is <b>undefined for relative references</b>, because the path portion is not meaningful except during relative reference resolution.</p>
 <p>It should be noted that path segment normalisation <b>is</b> defined for non-relative IRIs with relative paths, such as a URN like <tt>&lt;foo:a/b/../.././../../e&gt;</tt>. This is a major source of diversion between RFC 3986 implementations. This appears to arise from reusing the <tt>remove-dot-segments</tt> procedure as defined in RFC 3986 verbatim. In relative reference resolution, this procedure is <i>never</i> called on relative paths, only on absolute paths.</p>
-<p>For example, for the (non-relative) IRI <tt>&lt;foo:a/b/../.././../../e&gt;</tt>, implementations using the RFC 3986 procedure verbatim get <tt>&lt;foo:/e&gt;</tt>, whereas other implementations get <tt>&lt;foo:e&gt;</tt>. In the former camp are implementations like the Erlang/OTP system's built-in <tt>uri_string</tt> <a href="#network-uri">[4]</a>, and Guile-RDF <a href="#guile-rdf">[6]</a>, whereas in the latter camp are implementations like Haskell's <tt>network-uri</tt> <a href="#network-uri">[3]</a>. We are in the latter camp.</p>
+<p>For example, for the (non-relative) IRI <tt>&lt;foo:a/b/../.././../../e&gt;</tt>, implementations using the RFC 3986 procedure verbatim get <tt>&lt;foo:/e&gt;</tt>, whereas other implementations get <tt>&lt;foo:e&gt;</tt>. In the former camp are implementations like the Erlang/OTP system's built-in <tt>uri_string</tt> <a href="#erl-uri-string">[4]</a>, and Guile-RDF <a href="#guile-rdf">[6]</a>, whereas in the latter camp are implementations like Haskell's <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a>. We are in the latter camp.</p>
 <p>A fixed <tt>remove-dot-segments</tt> might be implemented like as follows. This procedure works on an internal representation of a path, consisting of either a forward-slash character or a segment (a list of characters or percent-encodings). The pattern-matcher employed in this example is that of SRFI 262 <a href="#srfi-262">[9]</a> and the <tt>break</tt> procedure of SRFI 1 <a href="#srfi-1">[7]</a>:
   <pre>
 (define (drop~1 cd)
@@ -752,15 +753,16 @@ example-IRI → &lt;/ex#IRI&gt;
 
 <h2 id="bibliography">References</h2>
 
-<p><span id="rfc3986">RFC 3986: Universal Resource Identifiers (URIs). <a href="https://www.rfc-editor.org/rfc/rfc3986/">https://www.rfc-editor.org/rfc/rfc3986/</a></p>
-<p><span id="rfc3987">RFC 3987: Internationalized Resource Identifiers (IRIs). <a href="https://www.rfc-editor.org/rfc/rfc3987/">https://www.rfc-editor.org/rfc/rfc3987/</a></p>
-<p><span id="hs-network-uri">Graham Klyne, 2004. <a href="https://github.com/haskell/network-uri">The <tt>network-uri</tt> package.</a></p>
-<p><span id="erl-uri-string">Erlang/OTP (n/d). <a href="https://www.erlang.org/docs/25/man/uri_string.html">URI processing functions.</a></p>
-<p><span id="webkit-tests">WebKit layout tests (n/d).<a href="https://github.com/WebKit/WebKit/blob/main/LayoutTests/fast/url/path-expected.txt">path-expected.txt</a></p>
-<p><span id="guile-rdf">Julien Lepiller, 2020. <a href="https://framagit.org/tyreunom/guile-rdf/">Guile-RDF</a></p>
-<p><span id="srfi-1">Olin Shivers, 1999. <a href="https://srfi.schemers.org/srfi-1">SRFI 1: List library</a></p>
-<p><span id="srfi-160">John Cowan, Shiro Kawai, 2019. <a href="https://srfi.schemers.org/srfi-160">SRFI 160: Homogenous numeric vector libraries</a></p>
-<p><span id="srfi-262">Daphne Preston-Kendal, 2025 (draft). <a href="https://srfi.schemers.org/srfi-262">SRFI 262: Extensible pattern-matcher</a></p>
+<ul id="references">
+<li>[1] <span id="rfc3986">RFC 3986: Universal Resource Identifiers (URIs). <a href="https://www.rfc-editor.org/rfc/rfc3986/">https://www.rfc-editor.org/rfc/rfc3986/</a></li>
+<li>[2] <span id="rfc3987">RFC 3987: Internationalized Resource Identifiers (IRIs). <a href="https://www.rfc-editor.org/rfc/rfc3987/">https://www.rfc-editor.org/rfc/rfc3987/</a></li>
+<li>[3] <span id="hs-network-uri">Graham Klyne, 2004. <a href="https://github.com/haskell/network-uri">The <tt>network-uri</tt> package.</a></li>
+<li>[4] <span id="erl-uri-string">Erlang/OTP (n/d). <a href="https://www.erlang.org/docs/25/man/uri_string.html">URI processing functions.</a></li>
+<li>[5] <span id="webkit">WebKit layout tests (n/d).<a href="https://github.com/WebKit/WebKit/blob/main/LayoutTests/fast/url/path-expected.txt">path-expected.txt</a></li>
+<li>[6] <span id="guile-rdf">Julien Lepiller, 2020. <a href="https://framagit.org/tyreunom/guile-rdf/">Guile-RDF</a></li>
+<li>[7] <span id="srfi-1">Olin Shivers, 1999. <a href="https://srfi.schemers.org/srfi-1">SRFI 1: List library</a></li>
+<li>[8] <span id="srfi-160">John Cowan, Shiro Kawai, 2019. <a href="https://srfi.schemers.org/srfi-160">SRFI 160: Homogenous numeric vector libraries</a></li>
+<li>[9] <span id="srfi-262">Daphne Preston-Kendal, 2025 (draft). <a href="https://srfi.schemers.org/srfi-262">SRFI 262: Extensible pattern-matcher</a></li></ul>
 
 <h2 id="acknowledgements">Acknowledgements</h2>
 
