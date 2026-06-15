@@ -13,12 +13,13 @@ SPDX-License-Identifier: MIT
     <style>
       dl.test-cases { margin-left: 2em; }
       dl.test-cases dt { font-weight: bold; margin-top: 0.75em; }
-      dl.test-cases dd { margin-left: 1.5em; margin-bottom: 0; }
+      dl.test-cases dd { margin-left: 1.5em; margin-bottom: 0; overflow-x: auto; }
       dl.test-cases dd .remark { display: block; font-style: italic; margin-top: 0.2em; }
       dl.test-cases dd .components { display: block; margin-top: 0.2em; }
       table.parsing-segments { margin-left: 2em; border-collapse: collapse; }
       table.parsing-segments th, table.parsing-segments td { padding: 0.2em 0.4em; text-align: left; }
       table.parsing-segments tr.case-label td { padding-top: 0.5em; font-weight: bold; }
+      .overflow-x { overflow-x: auto; }
     </style>
   </head>
   <body>
@@ -649,6 +650,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 </dl>
 
 <h4>Parsing expected segments</h4>
+<div class="overflow-x">
 <table class="parsing-segments">
   <tr><th>scheme</th><th>user</th><th>host</th><th>port</th><th>path</th><th>query</th><th>fragment</th></tr>
   <tr class="case-label"><td colspan="7">Empty URI: <tt>&lt;&gt;</tt></td></tr>
@@ -742,6 +744,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
   <tr class="case-label"><td colspan="7">Relative reference empty port implies empty host: <tt>&lt;//:/some/where/place?qua#ought&gt;</tt></td></tr>
   <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
 </table>
+</div>
 
 <h2 id="implementation">Implementation</h2>
 
