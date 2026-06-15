@@ -45,7 +45,7 @@ The editor will add this section.</p>
 
 <h2 id="rationale">Rationale</h2>
 
-<p>RFC 3986 <a href="#rfc3986">[1]</a> describes an abstract syntax for uniform resource identifiers (URIs) as well as their relative references, which allow documents to be authored without knowing the final publishing location. RFC 3987 <a href="#rfc3987">[2]</a> defines IRIs, which generalise URIs to unicode by defining an interpretation of escapes as sequences of UTF-8 octets.</p>
+<p>RFC 3986 <a href="#rfc3986">[1]</a> describes an abstract syntax for uniform resource identifiers (URIs) as well as their relative references, which allow documents to be authored without knowing the final publishing location. RFC 3987 <a href="#rfc3987">[2]</a> defines IRIs, which generalise URIs to Unicode by defining an interpretation of escapes as sequences of UTF-8 octets.</p>
 
 <p>URIs and IRIs are widely used to denote resources across the world wide web, and are the basis of a number of web standards. It is critical to present a programming interface for manipulation of different components in isolation (e.g. paths, hostnames), as working with an URI's coarse string representation directly is error-prone. RFC 3986 defines an abstract syntax and hence conveniently forms the basis of such a programming interface. Further, RFC 3987's generalisation to internationalised identifiers is a natural extension, allowing us to faithfully denote resources in a number of languages, using the universal character set. Indeed, IRIs form the basis of modern standards like Resource Description Format (RDF), a widespread formal model for metadata interchange and knowledge representation. We hence require support for both URIs and IRIs.</p>
 
@@ -54,9 +54,9 @@ The editor will add this section.</p>
 <h2 id="specification">Specification</h2>
 
 <h3>Relative references and polymorphic procedures</h3>
-<p>RFC 3986 and 3987 distinguish URIs and IRIs respectively, from their <b>relative references</b>, which must be resolved against a base URI or IRI in order to be used. The main application of relative references is to allow one to refer to resources and author documents without knowing the final publishing location. For example, a graph database may produce RDF documents specified in RDF/XML, where resources are denoted with IRI relative references, assuming that these documents would be interchanged with another system which mints full IRIs with respect to its hosting location.</p>
+<p>RFC 3986 and 3987 distinguish URIs and IRIs, respectively, from their <b>relative references</b>, which must be resolved against a base URI or IRI in order to be used. The main application of relative references is to allow one to refer to resources and author documents without knowing the final publishing location. For example, a graph database may produce RDF documents specified in RDF/XML, where resources are denoted with IRI-relative references, assuming that these documents would be interchanged with another system which mints full IRIs with respect to its hosting location.</p>
 <p>Somewhat confusingly, RFC 3986 defines "URI-reference" as the most common usage of URI: either an URI or a relative reference. We follow this common usage by developing polymorphic getters and setters which work on URIs and relative references, with the predicate <tt>uri?</tt> holding true for both URIs and relative references. This procedure would hence correspond to testing for an RFC 3986 "URI-reference". (RFC 3987 follows an identical convention for IRIs and their relative references, so the same approach is followed for IRIs.)</p>
-<p>The most divergent behaviour between widespread implementations of URIs and IRIs has been with respect to normalisation of relative references. We explicitly avoid defining path segment normalisation for relative references (regardless of whether the <i>path</i> is absolute or relative) because the behaviour is largely undefined by RFC 3986 and 3987 or any current RFC. See the section on normalisation for more details, and the test suite.</p>
+<p>The most divergent behaviour between widespread implementations of URIs and IRIs has been with respect to normalisation of relative references. We explicitly avoid defining path segment normalisation for relative references (regardless of whether the <i>path</i> is absolute or relative) because the behaviour is largely undefined by RFC 3986 and 3987 or any current RFC. See the section on normalisation for more details and the test suite.</p>
 
 <h3>A record type presentation</h3>
 <p>URIs and IRIs are structured data. Of course, record types are convenient as they generate dedicated getters and setters. More importantly, however, we think that record structures are necessary in this case for normalisation procedures to be structure-preserving. Specifically, normalisation procedures may alter the path, such that its segments may be mistaken for other parts of the URI or IRI, such as the <tt>&lt;://&gt;</tt> portion separating scheme from authority, or for the hostname. Updates to authority components or to the path need to similarly ensure that they produce valid URIs and IRIs when serialised.</p>
@@ -64,8 +64,8 @@ The editor will add this section.</p>
 <p>A string representation of an URI or relative reference, or an IRI or relative reference (procedures <tt>uri->string</tt> and <tt>iri->string</tt>) is produced by concatenating string representations of the individual fields (scheme, hostname &c.), with the expected separators between components. For efficiency, no assumption should be made that the contents of individual fields can be checked at this point, which typically would involve additional, redundant parsing.</p>
 
 <h3>Pure and impure interfaces</h3>
-<p>This document defines an interface for both pure-functional and in-place updates to URIs and IRIs, with the latter interface defined in optional sub-libraries. The reasoning behind this is that although in-place setters may be more efficient, existing implementations of URIs and IRIs have not provided in-place setters, if at all. Further, this document is minimally prescriptive of the internal representation, as implementors may select different optimised data structures to represent immutable IRIs which take advantage of information sharing.</p>
-<p>We require implementations to provide a pure-functional interface to URIs and IRIs, but not an in-place interface. The reasoning for this is that if implementors choose data structures optimised to purely-functional programming, it is more cumbersome to create an impure interface, whereas it is not as cumbersome for implementors to create a (inefficient) pure-functional interface by copying the URI or IRI before updating in-place.</p>
+<p>This document defines an interface for both pure-functional and in-place updates to URIs and IRIs, with the latter interface defined in optional sub-libraries. The reasoning behind this is that although in-place setters may be more efficient, existing implementations of URIs and IRIs have not provided in-place setters, if at all. Further, this document is minimally prescriptive of the internal representation, as implementors may select different optimised data structures to represent immutable IRIs to take advantage of information sharing.</p>
+<p>We require implementations to provide a pure-functional interface to URIs and IRIs, but not an in-place interface. The reasoning for this is that if implementors choose data structures optimised to purely functional programming, it is more cumbersome to create an impure interface, whereas it is not as cumbersome for implementors to create a (inefficient) pure-functional interface by copying the URI or IRI before updating in-place.</p>
 
 <p>Indeed, while the pure-functional procedures are convenient to programmers, in the sample implementation, they are less efficient because they copy the URI or IRI before performing operations in-place. The sample implementation uses an internal (SRFI 160 <a href="#srfi-160">[8]</a>) bytevector representation to efficiently store both UTF-8 octets and percent-encoded escapes.</p>
 <p>If an implementation provides disjoint mutable and immutable URI and IRI variants, then it is an error to call the in-place setters on an immutable variant.
@@ -76,7 +76,7 @@ The editor will add this section.</p>
 <p>Second, for the path component, validity depends on whether a) any authority component is set; and b) whether we are setting it for an URI, or for a relative reference.
 <ol>
   <li>If any authority component is set, then an error is raised if the target path does not begin with a slash, or is otherwise non-empty (see RFC 3986's <tt>path-abempty</tt> production). An error is raised if there is a parse failure.</li>
-  <li>If no authority component is set, then we first check if we are dealing with an URI or a relative reference.</li>
+  <li>If no authority component is set, then we first check whether we are dealing with an URI or a relative reference.</li>
   <li>For an URI, if the path has a leading slash (<tt>path-absolute</tt> production) , then the first segment must not be empty (double slash would be parsed as the separator between scheme and authority).
   </li>For a relative reference, this is modified so that non-absolute paths must not have an initial segment with a colon in it (as this would be parsed as separator between scheme and authority). An error is raised if a path is to be set which would violate these conditions.</li>
 </ol></p>
@@ -93,18 +93,18 @@ The editor will add this section.</p>
 </p>
 
 <h4>Case normalisation</h4>
-<p>The scheme and host components of both URIs and IRIs are considered case-insensitive, with other components considered case-sensitive. For URIs, the repertoire of characters is within U.S. ASCII., whereas for IRIs, unicode characters may appear. Nonetheless, for both URIs and IRIs, only U.S. ASCII is case-insensitive, with characters like "É" never being normalised to a lower-case form like "é".</p>
-<p>Escapes (percent-encodings) take the form <tt>%</tt> <tt>0-F</tt> <tt>0-F</tt> (hexadecimal digits) and these hexadecimal digits have a canonical upper-case form. For example, <tt>%cf</tt> would be normalised to <tt>%CF</tt>. In practice, the sample implementation always parses these into a canonical form as it represents these internally as octets, not in the original string form. If implementations do preserve the original form, they must always support normalisation into the canonical upper-case form.</p>
+<p>The scheme and host components of both URIs and IRIs are considered case-insensitive, with other components considered case-sensitive. For URIs, the repertoire of characters is within U.S. ASCII., whereas for IRIs, Unicode characters may appear. Nonetheless, for both URIs and IRIs, only U.S. ASCII is case-insensitive, with characters like "É" never being normalised to a lower-case form like "é".</p>
+<p>Escapes (percent-encodings) take the form <tt>%</tt> <tt>0-F</tt> <tt>0-F</tt> (hexadecimal digits), and these hexadecimal digits have a canonical upper-case form. For example, <tt>%cf</tt> would be normalised to <tt>%CF</tt>. In practice, the sample implementation always parses these into a canonical form as it represents these internally as octets, not in the original string form. If implementations do preserve the original form, they must always support normalisation into the canonical upper-case form.</p>
 
 <h4>Escape (percent-encoding) normalisation</h4>
 <p>The interpretation of escapes differs for URIs and IRIs.</p>
-<p>For URIs, octets may individually be decoded to ASCII characters. Essentially, this occurs if a character is not in the URI reserved range, and if it is permissible within a given URI component (e.g. path). Characters in the reserved range, if encountered in the clear, must never be percent-encoded. Conversely, characters not in the reserved range, and which are not permissible within a given URI component, are encoded as a series of escapes corresponding to a series of UTF-8 octets. This bears particular mention, becaus while other encodings <i>are</i> valid URIs, the RFC 3986 specification specifically requires this encoding, which enables compatibility with the closely-related RFC 3987 specification for IRIs.</p>
-<p>IRIs, as well as generalising the range of characters permissible within the IRI to certain unicode ranges, interpret percent-encodings as UTF-8. Because all URIs are valid IRIs, the normalisation of IRIs with respect to percent-encodings is essentially the same as conversion from an URI to an IRI. During conversion, the entire IRI is interpreted as a UTF-8 code sequence, with any percent-encoding not part of a valid UTF-8 sequence being reencoded.</p>
+<p>For URIs, octets may individually be decoded to ASCII characters. Essentially, this occurs if a character is not in the URI reserved range, and if it is permissible within a given URI component (e.g. path). Characters in the reserved range, if encountered in the clear, must never be percent-encoded. Conversely, characters not in the reserved range, and which are not permissible within a given URI component, are encoded as a series of escapes corresponding to a series of UTF-8 octets. This bears particular mention because, while other encodings <i>are</i> valid URIs, the RFC 3986 specification specifically requires this encoding, which enables compatibility with the closely related RFC 3987 specification for IRIs.</p>
+<p>IRIs not only generalise the range of characters permissible within the IRI to certain Unicode ranges, but also interpret percent-encodings as UTF-8. Because all URIs are valid IRIs, the normalisation of IRIs with respect to percent-encodings is essentially the same as conversion from an URI to an IRI. During conversion, the entire IRI is interpreted as a UTF-8 code sequence, with any percent-encoding not part of a valid UTF-8 sequence being reencoded.</p>
 
 <h4>Path segment normalisation</h4>
-<p>Path segment normalisation is structurally-identical for both URIs and IRIs. It interprets an entire path with respect to two control sequences: <tt>.</tt> (current working directory) and <tt>..</tt> (upper working directory), similar to UNIX paths. Unlike the other two normalisation procedures, path segment normalisation is <b>undefined for relative references</b>, because the path portion is not meaningful except during relative reference resolution.</p>
+<p>Path segment normalisation is structurally identical for both URIs and IRIs. It interprets an entire path with respect to two control sequences: <tt>.</tt> (current working directory) and <tt>..</tt> (upper working directory), similar to UNIX paths. Unlike the other two normalisation procedures, path segment normalisation is <b>undefined for relative references</b>, because the path portion is not meaningful except during relative reference resolution.</p>
 <p>It should be noted that path segment normalisation <b>is</b> defined for non-relative IRIs with relative paths, such as a URN like <tt>&lt;foo:a/b/../.././../../e&gt;</tt>. This is a major source of diversion between RFC 3986 implementations. This appears to arise from reusing the <tt>remove-dot-segments</tt> procedure as defined in RFC 3986 verbatim. In relative reference resolution, this procedure is <i>never</i> called on relative paths, only on absolute paths.</p>
-<p>For example, for the (non-relative) IRI <tt>&lt;foo:a/b/../.././../../e&gt;</tt>, implementations using the RFC 3986 procedure verbatim get <tt><foo:/e></tt>, whereas other implementations get <tt>&lt;foo:e&gt;</tt>. In the former camp are implementations like the Erlang/OTP system's built-in <tt>uri_string</tt> <a href="#network-uri">[4]</a>, and Guile-RDF <a href="#guile-rdf">[6]</a>, whereas in the latter camp are implementations like Haskell's <tt>network-uri</tt> <a href="#network-uri">[3]</a>. We are in the latter camp.</p>
+<p>For example, for the (non-relative) IRI <tt>&lt;foo:a/b/../.././../../e&gt;</tt>, implementations using the RFC 3986 procedure verbatim get <tt>&lt;foo:/e&gt;</tt>, whereas other implementations get <tt>&lt;foo:e&gt;</tt>. In the former camp are implementations like the Erlang/OTP system's built-in <tt>uri_string</tt> <a href="#network-uri">[4]</a>, and Guile-RDF <a href="#guile-rdf">[6]</a>, whereas in the latter camp are implementations like Haskell's <tt>network-uri</tt> <a href="#network-uri">[3]</a>. We are in the latter camp.</p>
 <p>A fixed <tt>remove-dot-segments</tt> might be implemented like as follows. This procedure works on an internal representation of a path, consisting of either a forward-slash character or a segment (a list of characters or percent-encodings). The pattern-matcher employed in this example is that of SRFI 262 <a href="#srfi-262">[9]</a> and the <tt>break</tt> procedure of SRFI 1 <a href="#srfi-1">[7]</a>:
   <pre>
 (define (drop~1 cd)
@@ -153,10 +153,10 @@ The editor will add this section.</p>
 
 <h3>Notation and convention</h3>
 
-<p>Although we support both URIs and IRIs, for brevity we primarily describe behaviour for IRIs, and omit descriptions of the equivalent procedures for URIs where it behaves the same. This works because URIs and IRIs are structurally identical, with the divergence between RFC 3986 and 3987 arising from the generalisation of the character set, and the treatment of normalisation.</p>
+<p>Although we support both URIs and IRIs, for brevity we primarily describe behaviour for IRIs, and omit descriptions of the equivalent procedures for URIs where they behave the same. This works because URIs and IRIs are structurally identical, with the divergence between RFC 3986 and 3987 arising from the generalisation of the character set, and the treatment of normalisation.</p>
 <p>Type signatures are specified as arrows from input arguments to a single output. Multiple values are denoted <font color=grey>(typ ...)</font> and <font color=grey>()</font> denotes unit or void (equivalent to R<sup>6</sup>RS <tt>(cond [#f #f])</tt>).</p>
-<p>In type specifications, when we refer to <tt>iri</tt>, we refer to both IRIs and IRI relative references (i.e. the <tt>iri</tt> type and the <tt>relative-iri</tt> type). We specify which specific type of IRI with either <tt>non-relative-iri</tt> or <tt>relative-iri</tt>. This is a little loose, but best reflects the use of polymorphism in this library interface.</p>
-<p>Finally, throughout this document, we denote IRIs and URIs using angle brackets, e.g. <tt>&lt;http://example.org&gt;</tt>.</p>
+<p>In type specifications, when we refer to <tt>iri</tt>, we refer to both IRIs and IRI-relative references (i.e. the <tt>iri</tt> type and the <tt>relative-iri</tt> type). We specify which specific type of IRI with either <tt>non-relative-iri</tt> or <tt>relative-iri</tt>. This is a little loose, but best reflects the use of polymorphism in this library interface.</p>
+<p>Finally, throughout this document, we enclose IRIs and URIs in angle brackets, e.g. <tt>&lt;http://example.org&gt;</tt>.</p>
 
 <h3>IRI programming interface</h3>
 <h4>Library: <tt>(srfi 275 iri)</tt></h4>
@@ -253,7 +253,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 <b>Library:</b> <tt>(srfi 275 uri)</tt><br>
 <b>Library:</b> <tt>(srfi 275 uri in-place)</tt><br>
 
-<p>Identical programming interfaces to that of IRIs are given for URIs, with procedures and error messages renaming referencing <tt>uri</tt> instead of <tt>iri</tt>. The structure of a URI or URI relative reference is identical. The programming interface differs in the character set permissible within an URI, i.e. <tt>string->uri</tt> signals an appropriate error, as do the setters like <tt>set-uri-host!</tt>.</p>
+<p>Identical programming interfaces to that of IRIs are given for URIs, with procedures and error messages renaming referencing <tt>uri</tt> instead of <tt>iri</tt>. The structure of a URI or URI-relative reference is identical. The programming interface differs in the character set permissible within an URI, i.e. <tt>string->uri</tt> signals an appropriate error, as do the setters like <tt>set-uri-host!</tt>.</p>
 
 <h3>Relative reference resolution</h3>
 <h4>Library: <tt>(srfi 275 normalise)</tt></h4>
@@ -265,11 +265,11 @@ example-IRI → &lt;urn:/ex#IRI&gt;
   <pre>
 (define string-cases (list "g:h" "g" "./g" "g/" "/g" "//g"))
 
-(define base01 (string->iri"http://a/bb/ccc/d;p?q"))
-(define base02 (string->iri"http://a/bb/ccc/d/"))
-(define base07 (string->iri"file:///a/bb/ccc/d;p?q"))
+(define base01 (string->iri "http://a/bb/ccc/d;p?q"))
+(define base02 (string->iri "http://a/bb/ccc/d/"))
+(define base07 (string->iri "file:///a/bb/ccc/d;p?q"))
 
-(define (resolve-with base-iri);; higher-order, returns a function!
+(define (resolve-with base-iri) ;; Higher-order.  Returns a function.
   (lambda (ref)
     (resolve-reference base-iri (string->iri ref))))
 
@@ -292,7 +292,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 
 <b>Procedure:</b> <tt>(resolve-uri-reference base ref)</tt><font color=grey>: non-relative-iri &rarr; iri &rarr; non-relative-iri</font><br>
 
-<p>Relative reference resolution against a base URI. Behaviour is structurally-identical to that of relative reference resolution for IRIs, as is the error behaviour with respect to base URI.</p>
+<p>Relative reference resolution against a base URI. Behaviour is structurally identical to that of relative reference resolution for IRIs, as is the error behaviour with respect to base URI.</p>
 
 <h3>Normalisation</h3>
 <h4>Library: <tt>(srfi 275 normalise)</tt></h4>
@@ -300,11 +300,11 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 <b>Procedure:</b> <tt>(normalise-iri-case ident)</tt><font color=grey>: iri &rarr; iri</font><br>
 <b>Procedure:</b> <tt>(normalise-uri-case ident)</tt><font color=grey>: uri &rarr; uri</font><br>
 
-<p>Normalise case-insensitive components (scheme and host), and convert escaped characters (percent-encodings) to canonical upper-case. These procedures are pure-functional, returning the new identifier. These procedures are structurally-identical for both IRIs and URIs, with the only difference being in that they signal an error if the argument is not an IRI or URI respectively. These procedures are also well-defined for IRI and URI relative references respectively.</p>
+<p>Normalise case-insensitive components (scheme and host), and convert escaped characters (percent-encodings) to canonical upper-case. These procedures are pure-functional, returning the new identifier. These procedures are structurally identical for both IRIs and URIs, with the only difference being in that they signal an error if the argument is not an IRI or URI respectively. These procedures are also well-defined for IRI and URI-relative references respectively.</p>
 
 <b>Procedure:</b> <tt>(normalise-iri-escape ident)</tt><font color=grey>: iri &rarr; iri</font><br>
 
-<p>Normalise an IRI or relative reference's escapes (percent-encodings), potentially interpreting escapes if part of valid UTF-8 octet sequences as characters. Conversely, characters which are not permissible within an IRI component will be encoded as a series of escapes corresponding to UTF-8 octets. These procedures are indepodent: a fully normalised IRI or relative reference will be normalised to itself, and <tt>iri-equal?</tt> will hold true between the two. This procedure is pure-functional and structure-preserving.</p>
+<p>Normalise an IRI or relative reference's escapes (percent-encodings), potentially interpreting escapes if part of valid UTF-8 octet sequences as characters. Conversely, characters which are not permissible within an IRI component will be encoded as a series of escapes corresponding to UTF-8 octets. These procedures are idempotent: a fully normalised IRI or relative reference will be normalised to itself, and <tt>iri-equal?</tt> will hold true between the two. This procedure is pure-functional and structure-preserving.</p>
 
 <b>Procedure:</b> <tt>(normalise-uri-escape ident)</tt><font color=grey>: uri &rarr; uri</font><br>
 
@@ -313,7 +313,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 <b>Procedure:</b> <tt>(normalise-iri-path-segments ident)</tt><font color=grey>: iri &rarr; iri</font><br>
 <b>Procedure:</b> <tt>(normalise-uri-path-segments ident)</tt><font color=grey>: uri &rarr; uri</font><br>
 
-<p>Normalise path segments depending on the control segments <tt>.</tt> and <tt>..</tt>. While path segments of IRI or URI relative references are not normalised, these procedures simply have no effect and no error is signalled, for parity with the other normalisation procedures. While it is relatively uncommon for relative paths to appear in non-relative IRIs or URIs, they are perimssible e.g. within URN components. This procedure is pure-functional and structure-preserving.</p>
+<p>Normalise path segments depending on the control segments <tt>.</tt> and <tt>..</tt>. While path segments of IRI or URI-relative references are not normalised, these procedures simply have no effect and no error is signalled, for parity with the other normalisation procedures. While it is relatively uncommon for relative paths to appear in non-relative IRIs or URIs, they are permissible e.g. within URN components. This procedure is pure-functional and structure-preserving.</p>
 
 <b>Procedure:</b> <tt>(normalise-iri ident)</tt><font color=grey>: iri &rarr; iri</font><br>
 <b>Procedure:</b> <tt>(normalise-uri ident)</tt><font color=grey>: uri &rarr; uri</font><br>
@@ -371,10 +371,10 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 
 <b>Procedure:</b> <tt>(iri-eqv? A B)</tt><font color=grey>: iri &rarr; iri &rarr; boolean</font><br>
 
-<p>Two IRIs are equivalent if <tt>iri-equal?</tt> holds, or, post-normalisation with <tt>normalise-iri</tt>, <tt>iri-equal?</tt> holds. Similarly, two URIs are equivalent if <tt>uri-equal?</tt> holds, or, post-normalisation with <tt>normalise-uri</tt>, <tt>uri-equal?</tt> holds. It is an error to call <tt>iri-eqv?</tt> when either argument is not an IRI or relative reference. Similarly, it is an error to calle <tt>uri-eqv?</tt> when either argument is not an URI or relative reference.</p>
+<p>Two IRIs are equivalent if <tt>iri-equal?</tt> holds, or, post-normalisation with <tt>normalise-iri</tt>, <tt>iri-equal?</tt> holds. Similarly, two URIs are equivalent if <tt>uri-equal?</tt> holds, or, post-normalisation with <tt>normalise-uri</tt>, <tt>uri-equal?</tt> holds. It is an error to call <tt>iri-eqv?</tt> when either argument is not an IRI or relative reference. Similarly, it is an error to call <tt>uri-eqv?</tt> when either argument is not an URI or relative reference.</p>
 
 <b>Procedure:</b> <tt>(iri->uri ident)</tt><font color=grey>: iri &rarr; uri</font><br>
-<p>Convert an IRI to an URI. This procedes by encoding any character within certain ranges (see RFC 3987 ABNF <tt>ucschar</tt> and <tt>iprivate</tt>) to a series of escapes corresponding to those octets in UTF-8. This URI is also a valid IRI (albeit not normalised) as all URIs are valid IRIs. This procedure is structure preserving: (non-relative) IRIs are never transformed into relative references, or vice-versa. It is an error to call this procedure where the argument is not an IRI or relative reference.</p>
+<p>Convert an IRI to an URI. This proceeds by encoding any character within certain ranges (see RFC 3987 ABNF <tt>ucschar</tt> and <tt>iprivate</tt>) to a series of escapes corresponding to those octets in UTF-8. This URI is also a valid IRI (albeit not normalised) as all URIs are valid IRIs. This procedure is structure-preserving: (non-relative) IRIs are never transformed into relative references, or vice-versa. It is an error to call this procedure where the argument is not an IRI or relative reference.</p>
 
 <b>Procedure:</b> <tt>(uri->iri ident)</tt><font color=grey>: uri &rarr; iri</font><br>
 <p>Convert an URI to an IRI. This procedure can be viewed as upgrading the URI structure to that of an IRI, then normalising it as an IRI. It is an error to call this procedure where the argument is not an URI or relative reference.</p>
@@ -521,7 +521,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
   <dt>Wholly normalised not reencoded</dt>
   <dd><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
     &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></dd>
-  <dt>Repeated normalisation (indepondence)</dt>
+  <dt>Repeated normalisation (idempotence)</dt>
   <dd><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
     &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
     <span class="remark">In this test case, <tt>normalise-iri-escape</tt> should be called multiple times, i.e. <tt>(compose normalise-iri-escape normalise-iri-escape)</tt></span></dd>
@@ -748,7 +748,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 
 <h2 id="implementation">Implementation</h2>
 
-<a href="https://codeberg.org/dguthrie/scheme-iri">The sample implementation</a> is written in portable R<sup>6</sup>RS, albeit uses <a href="https://synthcode.com/scheme/chibi/lib/chibi/parse.html"><tt>chibi parse</tt></a> for parsing and imports SRFIs from the <a href="https://github.com/arcfide/chez-srfi">Chez-SRFI</a> grab-bag.</p>
+<a href="https://codeberg.org/dguthrie/scheme-iri">The sample implementation</a> is written in portable R<sup>6</sup>RS, but uses <a href="https://synthcode.com/scheme/chibi/lib/chibi/parse.html"><tt>chibi parse</tt></a> for parsing and imports SRFIs from the <a href="https://github.com/arcfide/chez-srfi">Chez-SRFI</a> grab-bag.</p>
 
 <h2 id="bibliography">References</h2>
 
