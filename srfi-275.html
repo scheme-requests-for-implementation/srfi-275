@@ -21,6 +21,7 @@ SPDX-License-Identifier: MIT
       table.parsing-segments th, table.parsing-segments td { padding: 0.2em 0.4em; text-align: left; }
       table.parsing-segments tr.case-label td { padding-top: 0.5em; font-weight: bold; }
       ul#references { list-style-type: none; }
+      .type-sig { color: grey; }
     </style>
   </head>
   <body>
@@ -57,13 +58,13 @@ SPDX-License-Identifier: MIT
 
 <h3>Relative references and polymorphic procedures</h3>
 <p>RFC 3986 and 3987 distinguish URIs and IRIs, respectively, from their <b>relative references</b>, which must be resolved against a base URI or IRI in order to be used. The main application of relative references is to allow one to refer to resources and author documents without knowing the final publishing location. For example, a graph database may produce RDF documents specified in RDF/XML, where resources are denoted with IRI-relative references, assuming that these documents would be interchanged with another system which mints full IRIs with respect to its hosting location.</p>
-<p>Somewhat confusingly, RFC 3986 defines "URI-reference" as the most common usage of URI: either an URI or a relative reference. We follow this common usage by developing polymorphic getters and setters which work on URIs and relative references, with the predicate <tt>uri?</tt> holding true for both URIs and relative references. This procedure would hence correspond to testing for an RFC 3986 "URI-reference". (RFC 3987 follows an identical convention for IRIs and their relative references, so the same approach is followed for IRIs.)</p>
+<p>Somewhat confusingly, RFC 3986 defines "URI-reference" as the most common usage of URI: either an URI or a relative reference. We follow this common usage by developing polymorphic getters and setters which work on URIs and relative references, with the predicate <code>uri?</code> holding true for both URIs and relative references. This procedure would hence correspond to testing for an RFC 3986 "URI-reference". (RFC 3987 follows an identical convention for IRIs and their relative references, so the same approach is followed for IRIs.)</p>
 <p>The most divergent behaviour between widespread implementations of URIs and IRIs has been with respect to normalisation of relative references. We explicitly avoid defining path segment normalisation for relative references (regardless of whether the <i>path</i> is absolute or relative) because the behaviour is largely undefined by RFC 3986 and 3987 or any current RFC. See the section on normalisation for more details and the test suite.</p>
 
 <h3>A record type presentation</h3>
-<p>URIs and IRIs are structured data. Of course, record types are convenient as they generate dedicated getters and setters. More importantly, however, we think that record structures are necessary in this case for normalisation procedures to be structure-preserving. Specifically, normalisation procedures may alter the path, such that its segments may be mistaken for other parts of the URI or IRI, such as the <tt>&lt;://&gt;</tt> portion separating scheme from authority, or for the hostname. Updates to authority components or to the path need to similarly ensure that they produce valid URIs and IRIs when serialised.</p>
+<p>URIs and IRIs are structured data. Of course, record types are convenient as they generate dedicated getters and setters. More importantly, however, we think that record structures are necessary in this case for normalisation procedures to be structure-preserving. Specifically, normalisation procedures may alter the path, such that its segments may be mistaken for other parts of the URI or IRI, such as the <code>&lt;://&gt;</code> portion separating scheme from authority, or for the hostname. Updates to authority components or to the path need to similarly ensure that they produce valid URIs and IRIs when serialised.</p>
 <p>We argue that a string representation makes it too easy to inadvertently modify the structure, because normalisation of individual components may yield a string which, when parsed again, is interpreted differently with respect to the structure. A good example of this is the restrictions on paths given an authority, because a non-empty authority is denoted in an URI using two slashes, which are characters which may also appear in paths.</p>
-<p>A string representation of an URI or relative reference, or an IRI or relative reference (procedures <tt>uri->string</tt> and <tt>iri->string</tt>) is produced by concatenating string representations of the individual fields (scheme, hostname &c.), with the expected separators between components. For efficiency, no assumption should be made that the contents of individual fields can be checked at this point, which typically would involve additional, redundant parsing.</p>
+<p>A string representation of an URI or relative reference, or an IRI or relative reference (procedures <code>uri->string</code> and <code>iri->string</code>) is produced by concatenating string representations of the individual fields (scheme, hostname &amp;c.), with the expected separators between components. For efficiency, no assumption should be made that the contents of individual fields can be checked at this point, which typically would involve additional, redundant parsing.</p>
 
 <h3>Pure and impure interfaces</h3>
 <p>This document defines an interface for both pure-functional and in-place updates to URIs and IRIs, with the latter interface defined in optional sub-libraries. The reasoning behind this is that although in-place setters may be more efficient, existing implementations of URIs and IRIs have not provided in-place setters, if at all. Further, this document is minimally prescriptive of the internal representation, as implementors may select different optimised data structures to represent immutable IRIs to take advantage of information sharing.</p>
@@ -75,28 +76,27 @@ SPDX-License-Identifier: MIT
 <h3>Error behaviour of setters and updaters</h3>
 <p>Our design is to provide getters and setters which abstract away the internal representation, working on string representations of URI components. More generally, we suspect that existing implementations largely omit setters and updaters because preserving internal consistency is fairly cumbersome on the implementor and programmer, with validity of authority components being defined with respect to the path, and vice versa. The specific challenge is to ensure that setting a given component would not violate the URI grammar, as this may elicit a flat string representation which would have a different structure when parsed again.</p>
 <p>First, the scheme, query and fragment components do not depend on validity of other components. Setters and updaters invoke the respective parsers on the string representation to be set, and raise an error if the parse failed.</p>
-<p>Second, for the path component, validity depends on whether a) any authority component is set; and b) whether we are setting it for an URI, or for a relative reference.
+<p>Second, for the path component, validity depends on whether a) any authority component is set; and b) whether we are setting it for an URI, or for a relative reference.</p>
 <ol>
-  <li>If any authority component is set, then an error is raised if the target path does not begin with a slash, or is otherwise non-empty (see RFC 3986's <tt>path-abempty</tt> production). An error is raised if there is a parse failure.</li>
+  <li>If any authority component is set, then an error is raised if the target path does not begin with a slash, or is otherwise non-empty (see RFC 3986's <code>path-abempty</code> production). An error is raised if there is a parse failure.</li>
   <li>If no authority component is set, then we first check whether we are dealing with an URI or a relative reference.</li>
-  <li>For an URI, if the path has a leading slash (<tt>path-absolute</tt> production) , then the first segment must not be empty (double slash would be parsed as the separator between scheme and authority).
-  </li>For a relative reference, this is modified so that non-absolute paths must not have an initial segment with a colon in it (as this would be parsed as separator between scheme and authority). An error is raised if a path is to be set which would violate these conditions.</li>
-</ol></p>
+  <li>For an URI, if the path has a leading slash (<code>path-absolute</code> production), then the first segment must not be empty (double slash would be parsed as the separator between scheme and authority).</li>
+  <li>For a relative reference, this is modified so that non-absolute paths must not have an initial segment with a colon in it (as this would be parsed as separator between scheme and authority). An error is raised if a path is to be set which would violate these conditions.</li>
+</ol>
 <p>The validity of an authority component likewise depends on the shape of the path. See RFC 3986 ABNF for details.</p>
 
 <h3>Normalisation</h3>
 
-<p>We support three, scheme-independent normalisation procedures:
+<p>We support three, scheme-independent normalisation procedures:</p>
   <ol>
     <li>Case normalisation, in which U.S. ASCII may be case-insensitive, and in which escaped (percent-encoded) octets have a canonical upper-case form.</li>
     <li>Escape normalisation, in which percent-encoded octets may be decoded, or characters may be encoded as escapes.</li>
-    <li>Path segment normalisation, in which dotted segments (<tt>.</tt> and <tt>..</tt>) are eliminated.</li>
+    <li>Path segment normalisation, in which dotted segments (<code>.</code> and <code>..</code>) are eliminated.</li>
   </ol>
-</p>
 
 <h4>Case normalisation</h4>
 <p>The scheme and host components of both URIs and IRIs are considered case-insensitive, with other components considered case-sensitive. For URIs, the repertoire of characters is within U.S. ASCII., whereas for IRIs, Unicode characters may appear. Nonetheless, for both URIs and IRIs, only U.S. ASCII is case-insensitive, with characters like "É" never being normalised to a lower-case form like "é".</p>
-<p>Escapes (percent-encodings) take the form <tt>%</tt> <tt>0-F</tt> <tt>0-F</tt> (hexadecimal digits), and these hexadecimal digits have a canonical upper-case form. For example, <tt>%cf</tt> would be normalised to <tt>%CF</tt>. In practice, the sample implementation always parses these into a canonical form as it represents these internally as octets, not in the original string form. If implementations do preserve the original form, they must always support normalisation into the canonical upper-case form.</p>
+<p>Escapes (percent-encodings) take the form <code>%</code> <code>0-F</code> <code>0-F</code> (hexadecimal digits), and these hexadecimal digits have a canonical upper-case form. For example, <code>%cf</code> would be normalised to <code>%CF</code>. In practice, the sample implementation always parses these into a canonical form as it represents these internally as octets, not in the original string form. If implementations do preserve the original form, they must always support normalisation into the canonical upper-case form.</p>
 
 <h4>Escape (percent-encoding) normalisation</h4>
 <p>The interpretation of escapes differs for URIs and IRIs.</p>
@@ -104,10 +104,10 @@ SPDX-License-Identifier: MIT
 <p>IRIs not only generalise the range of characters permissible within the IRI to certain Unicode ranges, but also interpret percent-encodings as UTF-8. Because all URIs are valid IRIs, the normalisation of IRIs with respect to percent-encodings is essentially the same as conversion from an URI to an IRI. During conversion, the entire IRI is interpreted as a UTF-8 code sequence, with any percent-encoding not part of a valid UTF-8 sequence being reencoded.</p>
 
 <h4>Path segment normalisation</h4>
-<p>Path segment normalisation is structurally identical for both URIs and IRIs. It interprets an entire path with respect to two control sequences: <tt>.</tt> (current working directory) and <tt>..</tt> (upper working directory), similar to UNIX paths. Unlike the other two normalisation procedures, path segment normalisation is <b>undefined for relative references</b>, because the path portion is not meaningful except during relative reference resolution.</p>
-<p>It should be noted that path segment normalisation <b>is</b> defined for non-relative IRIs with relative paths, such as a URN like <tt>&lt;foo:a/b/../.././../../e&gt;</tt>. This is a major source of diversion between RFC 3986 implementations. This appears to arise from reusing the <tt>remove-dot-segments</tt> procedure as defined in RFC 3986 verbatim. In relative reference resolution, this procedure is <i>never</i> called on relative paths, only on absolute paths.</p>
-<p>For example, for the (non-relative) IRI <tt>&lt;foo:a/b/../.././../../e&gt;</tt>, implementations using the RFC 3986 procedure verbatim get <tt>&lt;foo:/e&gt;</tt>, whereas other implementations get <tt>&lt;foo:e&gt;</tt>. In the former camp are implementations like the Erlang/OTP system's built-in <tt>uri_string</tt> <a href="#erl-uri-string">[4]</a>, and Guile-RDF <a href="#guile-rdf">[6]</a>, whereas in the latter camp are implementations like Haskell's <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a>. We are in the latter camp.</p>
-<p>A fixed <tt>remove-dot-segments</tt> might be implemented like as follows. This procedure works on an internal representation of a path, consisting of either a forward-slash character or a segment (a list of characters or percent-encodings). The pattern-matcher employed in this example is that of SRFI 262 <a href="#srfi-262">[9]</a> and the <tt>break</tt> procedure of SRFI 1 <a href="#srfi-1">[7]</a>:
+<p>Path segment normalisation is structurally identical for both URIs and IRIs. It interprets an entire path with respect to two control sequences: <code>.</code> (current working directory) and <code>..</code> (upper working directory), similar to UNIX paths. Unlike the other two normalisation procedures, path segment normalisation is <b>undefined for relative references</b>, because the path portion is not meaningful except during relative reference resolution.</p>
+<p>It should be noted that path segment normalisation <b>is</b> defined for non-relative IRIs with relative paths, such as a URN like <code>&lt;foo:a/b/../.././../../e&gt;</code>. This is a major source of diversion between RFC 3986 implementations. This appears to arise from reusing the <code>remove-dot-segments</code> procedure as defined in RFC 3986 verbatim. In relative reference resolution, this procedure is <i>never</i> called on relative paths, only on absolute paths.</p>
+<p>For example, for the (non-relative) IRI <code>&lt;foo:a/b/../.././../../e&gt;</code>, implementations using the RFC 3986 procedure verbatim get <code>&lt;foo:/e&gt;</code>, whereas other implementations get <code>&lt;foo:e&gt;</code>. In the former camp are implementations like the Erlang/OTP system's built-in <code>uri_string</code> <a href="#erl-uri-string">[4]</a>, and Guile-RDF <a href="#guile-rdf">[6]</a>, whereas in the latter camp are implementations like Haskell's <code>network-uri</code> <a href="#hs-network-uri">[3]</a>. We are in the latter camp.</p>
+<p>A fixed <code>remove-dot-segments</code> might be implemented like as follows. This procedure works on an internal representation of a path, consisting of either a forward-slash character or a segment (a list of characters or percent-encodings). The pattern-matcher employed in this example is that of SRFI 262 <a href="#srfi-262">[9]</a> and the <code>break</code> procedure of SRFI 1 <a href="#srfi-1">[7]</a>:</p>
   <pre>
 (define (drop~1 cd)
   (match cd
@@ -150,32 +150,31 @@ SPDX-License-Identifier: MIT
                      (next-segment path)])
          (elim-dots next-path (cons shift-this buffer)))])))
   </pre>
-</p>
-<p>Additionally, the above suggested implementation of <tt>remove-dot-segments</tt> is considerably clearer than the stack-based description in RFC 3986, with fewer pattern-matching clauses required.</p>
+<p>Additionally, the above suggested implementation of <code>remove-dot-segments</code> is considerably clearer than the stack-based description in RFC 3986, with fewer pattern-matching clauses required.</p>
 
 <h3>Notation and convention</h3>
 
 <p>Although we support both URIs and IRIs, for brevity we primarily describe behaviour for IRIs, and omit descriptions of the equivalent procedures for URIs where they behave the same. This works because URIs and IRIs are structurally identical, with the divergence between RFC 3986 and 3987 arising from the generalisation of the character set, and the treatment of normalisation.</p>
-<p>Type signatures are specified as arrows from input arguments to a single output. Multiple values are denoted <font color=grey>(typ ...)</font> and <font color=grey>()</font> denotes unit or void (equivalent to R<sup>6</sup>RS <tt>(cond [#f #f])</tt>).</p>
-<p>In type specifications, when we refer to <tt>iri</tt>, we refer to both IRIs and IRI-relative references (i.e. the <tt>iri</tt> type and the <tt>relative-iri</tt> type). We specify which specific type of IRI with either <tt>non-relative-iri</tt> or <tt>relative-iri</tt>. This is a little loose, but best reflects the use of polymorphism in this library interface.</p>
-<p>Finally, throughout this document, we enclose IRIs and URIs in angle brackets, e.g. <tt>&lt;http://example.org&gt;</tt>.</p>
+<p>Type signatures are specified as arrows from input arguments to a single output. Multiple values are denoted <span class="type-sig">(typ ...)</span> and <span class="type-sig">()</span> denotes unit or void (equivalent to R<sup>6</sup>RS <code>(cond [#f #f])</code>).</p>
+<p>In type specifications, when we refer to <code>iri</code>, we refer to both IRIs and IRI-relative references (i.e. the <code>iri</code> type and the <code>relative-iri</code> type). We specify which specific type of IRI with either <code>non-relative-iri</code> or <code>relative-iri</code>. This is a little loose, but best reflects the use of polymorphism in this library interface.</p>
+<p>Finally, throughout this document, we enclose IRIs and URIs in angle brackets, e.g. <code>&lt;http://example.org&gt;</code>.</p>
 
 <h3>IRI programming interface</h3>
-<h4>Library: <tt>(srfi 275 iri)</tt></h4>
+<h4>Library: <code>(srfi 275 iri)</code></h4>
 
-<b>Syntax:</b> <tt>iri</tt><br>
-<b>Procedure:</b> <tt>(non-relative-iri? ident)</tt><font color=grey>: any &rarr; boolean</font><br>
-<b>Procedure:</b> <tt>(iri? ident)</tt><font color=grey>: any &rarr; boolean</font><br>
-<b>Procedure:</b> <tt>(iri-scheme ident)</tt><font color=grey>: non-relative-iri &rarr; string?</font><br>
-<b>Procedure:</b> <tt>(iri-user ident)</tt><font color=grey>: iri &rarr; string?</font><br>
-<b>Procedure:</b> <tt>(iri-host ident)</tt><font color=grey>: iri &rarr; string?</font><br>
-<b>Procedure:</b> <tt>(iri-port ident)</tt><font color=grey>: iri &rarr; fixnum?</font><br>
-<b>Procedure:</b> <tt>(iri-path ident)</tt><font color=grey>: iri &rarr; string?</font><br>
-<b>Procedure:</b> <tt>(iri-query ident)</tt><font color=grey>: iri &rarr; string?</font><br>
-<b>Procedure:</b> <tt>(iri-fragment ident)</tt><font color=grey>: iri &rarr; string?</font><br>
+<b>Syntax:</b> <code>iri</code><br>
+<b>Procedure:</b> <code>(non-relative-iri? ident)</code><span class="type-sig">: any &rarr; boolean</span><br>
+<b>Procedure:</b> <code>(iri? ident)</code><span class="type-sig">: any &rarr; boolean</span><br>
+<b>Procedure:</b> <code>(iri-scheme ident)</code><span class="type-sig">: non-relative-iri &rarr; string?</span><br>
+<b>Procedure:</b> <code>(iri-user ident)</code><span class="type-sig">: iri &rarr; string?</span><br>
+<b>Procedure:</b> <code>(iri-host ident)</code><span class="type-sig">: iri &rarr; string?</span><br>
+<b>Procedure:</b> <code>(iri-port ident)</code><span class="type-sig">: iri &rarr; fixnum?</span><br>
+<b>Procedure:</b> <code>(iri-path ident)</code><span class="type-sig">: iri &rarr; string?</span><br>
+<b>Procedure:</b> <code>(iri-query ident)</code><span class="type-sig">: iri &rarr; string?</span><br>
+<b>Procedure:</b> <code>(iri-fragment ident)</code><span class="type-sig">: iri &rarr; string?</span><br>
 
 <p>IRI record type. The record's fields are derived from the RFC 3986 URI grammar. The procedures for components other than scheme are polymorphic on both IRIs and relative references (for which see below).</p>
-<p>Examples:
+<p>Examples:</p>
   <pre>
 (define example-IRI (string->iri "http://example.org:80/ex#IRI"))
 
@@ -192,23 +191,22 @@ example-IRI → &lt;http://example.org:80/ex#IRI&gt;
 (iri-query example-IRI) → #f
 (iri-fragment example-IRI) → "IRI"
   </pre>
-</p>
 
-<b>Procedure:</b> <tt>(update-iri-scheme ident str)</tt><font color=grey>: non-relative-iri &rarr; string? &rarr; non-relative-iri</font></br>
-<b>Procedure:</b> <tt>(update-iri-user ident str)</tt><font color=grey>: iri &rarr; string? &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(update-iri-host ident str)</tt><font color=grey>: iri &rarr; string? &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(update-iri-port ident str)</tt><font color=grey>: iri &rarr; fixnum? &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(update-iri-path ident str)</tt><font color=grey>: iri &rarr; string? &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(update-iri-query ident str)</tt><font color=grey>: iri &rarr; string? &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(update-iri-fragment ident str)</tt><font color=grey>: iri &rarr; string? &rarr; iri</font><br>
+<b>Procedure:</b> <code>(update-iri-scheme ident str)</code><span class="type-sig">: non-relative-iri &rarr; string? &rarr; non-relative-iri</span><br>
+<b>Procedure:</b> <code>(update-iri-user ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; iri</span><br>
+<b>Procedure:</b> <code>(update-iri-host ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; iri</span><br>
+<b>Procedure:</b> <code>(update-iri-port ident str)</code><span class="type-sig">: iri &rarr; fixnum? &rarr; iri</span><br>
+<b>Procedure:</b> <code>(update-iri-path ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; iri</span><br>
+<b>Procedure:</b> <code>(update-iri-query ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; iri</span><br>
+<b>Procedure:</b> <code>(update-iri-fragment ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; iri</span><br>
 
-<p>Pure-functional setters for IRIs and relative references. Apart from <tt>update-iri-port</tt>, these procedures take a string, parsing it to the relevant field. It is an error to pass a string which does not conform to the RFC 3987 grammar for that component. The <tt>update-iri-scheme</tt> procedure is undefined for relative references, and it is an error to call it on a relative reference.</p>
+<p>Pure-functional setters for IRIs and relative references. Apart from <code>update-iri-port</code>, these procedures take a string, parsing it to the relevant field. It is an error to pass a string which does not conform to the RFC 3987 grammar for that component. The <code>update-iri-scheme</code> procedure is undefined for relative references, and it is an error to call it on a relative reference.</p>
 
-<b>Syntax:</b> <tt>relative-iri</tt><br>
-<b>Procedure:</b> <tt>(relative-iri? ident)</tt><font color=grey>: any &rarr; boolean</font><br>
-<b>Procedure:</b> <tt>(iri? ident)</tt><font color=grey>: any &rarr; boolean</font><br>
-<p>Relative IRI record type. Relative references do not have a scheme, and it is an error to call <tt>iri-scheme</tt> on one. The remaining procedures are polymorphic on both relative references and IRIs.</p>
-<p>Examples:
+<b>Syntax:</b> <code>relative-iri</code><br>
+<b>Procedure:</b> <code>(relative-iri? ident)</code><span class="type-sig">: any &rarr; boolean</span><br>
+<b>Procedure:</b> <code>(iri? ident)</code><span class="type-sig">: any &rarr; boolean</span><br>
+<p>Relative IRI record type. Relative references do not have a scheme, and it is an error to call <code>iri-scheme</code> on one. The remaining procedures are polymorphic on both relative references and IRIs.</p>
+<p>Examples:</p>
   <pre>
 (define example-IRI (string->iri "/ex#IRI"))
 
@@ -226,44 +224,43 @@ example-IRI → &lt;/ex#IRI&gt;
 (iri-query example-IRI) → #f
 (iri-fragment example-IRI) → "IRI"
   </pre>
-</p>
 
-<b>Procedure:</b> <tt>(iri-authority ident)</tt><font color=grey>: iri | relative-iri &rarr; #f | (string? string? fixnum?)</font><br>
-<b>Procedure:</b> <tt>(update-iri-authority ident user host port)</tt><font color=grey>: iri &rarr; #f | string? &rarr; string? &rarr; fixnum? &rarr; iri</font><br>
-<p>Authority is derived from the user, host and port. The <tt>iri-authority</tt> procedure simply retrieves these as multiple values. The <tt>update-iri-authority</tt> procedure mints a new IRI with these three values set.</p>
+<b>Procedure:</b> <code>(iri-authority ident)</code><span class="type-sig">: iri | relative-iri &rarr; #f | (string? string? fixnum?)</span><br>
+<b>Procedure:</b> <code>(update-iri-authority ident user host port)</code><span class="type-sig">: iri &rarr; #f | string? &rarr; string? &rarr; fixnum? &rarr; iri</span><br>
+<p>Authority is derived from the user, host and port. The <code>iri-authority</code> procedure simply retrieves these as multiple values. The <code>update-iri-authority</code> procedure mints a new IRI with these three values set.</p>
 
-<b>Procedure:</b> <tt>(iri-equal? A B)</tt><font color=grey>: iri &rarr; iri &rarr; boolean</font><br>
+<b>Procedure:</b> <code>(iri-equal? A B)</code><span class="type-sig">: iri &rarr; iri &rarr; boolean</span><br>
 <p>Holds true if the two arguments are IRIs and their fields are equal, or if the two arguments are relative references and their fields are equal. An IRI is never equal to a relative reference, and vice versa. It is an error to call this procedure when either argument is not an IRI or relative reference.</p>
 
-<h4>Library: <tt>(srfi 275 iri in-place)</tt></h4>
+<h4>Library: <code>(srfi 275 iri in-place)</code></h4>
 
-<b>Procedure:</b> <tt>(set-iri-scheme! ident str)</tt><font color=grey>: non-relative-iri &rarr; string? &rarr; ()</font></br>
-<b>Procedure:</b> <tt>(set-iri-user! ident str)</tt><font color=grey>: iri &rarr; string? &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(set-iri-host! ident str)</tt><font color=grey>: iri &rarr; string? &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(set-iri-port! ident str)</tt><font color=grey>: iri &rarr; fixnum? &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(set-iri-path! ident str)</tt><font color=grey>: iri &rarr; string? &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(set-iri-query! ident str)</tt><font color=grey>: iri &rarr; string? &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(set-iri-fragment! ident str)</tt><font color=grey>: iri &rarr; string? &rarr; ()</font><br>
+<b>Procedure:</b> <code>(set-iri-scheme! ident str)</code><span class="type-sig">: non-relative-iri &rarr; string? &rarr; ()</span><br>
+<b>Procedure:</b> <code>(set-iri-user! ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; ()</span><br>
+<b>Procedure:</b> <code>(set-iri-host! ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; ()</span><br>
+<b>Procedure:</b> <code>(set-iri-port! ident str)</code><span class="type-sig">: iri &rarr; fixnum? &rarr; ()</span><br>
+<b>Procedure:</b> <code>(set-iri-path! ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; ()</span><br>
+<b>Procedure:</b> <code>(set-iri-query! ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; ()</span><br>
+<b>Procedure:</b> <code>(set-iri-fragment! ident str)</code><span class="type-sig">: iri &rarr; string? &rarr; ()</span><br>
 
-<p>In-place setters for IRIs and relative references. Apart from <tt>set-iri-port!</tt>, these procedures take a string, parsing it to the relevant field. It is an error to pass a string which does not conform to the RFC 3987 grammar for that component. The <tt>set-iri-scheme!</tt> procedure is undefined for relative references, and it is an error to call it on a relative reference.</p>
+<p>In-place setters for IRIs and relative references. Apart from <code>set-iri-port!</code>, these procedures take a string, parsing it to the relevant field. It is an error to pass a string which does not conform to the RFC 3987 grammar for that component. The <code>set-iri-scheme!</code> procedure is undefined for relative references, and it is an error to call it on a relative reference.</p>
 
-<b>Procedure:</b> <tt>(set-iri-authority! ident user host port)</tt><font color=grey>: iri &rarr; #f | string? &rarr; string? &rarr; fixnum? &rarr; ()</font><br>
+<b>Procedure:</b> <code>(set-iri-authority! ident user host port)</code><span class="type-sig">: iri &rarr; #f | string? &rarr; string? &rarr; fixnum? &rarr; ()</span><br>
 
 <p>Set the user, host and port authority components in-place.</p>
 
 <h3>URI programming interface</h3>
-<b>Library:</b> <tt>(srfi 275 uri)</tt><br>
-<b>Library:</b> <tt>(srfi 275 uri in-place)</tt><br>
+<b>Library:</b> <code>(srfi 275 uri)</code><br>
+<b>Library:</b> <code>(srfi 275 uri in-place)</code><br>
 
-<p>Identical programming interfaces to that of IRIs are given for URIs, with procedures and error messages renaming referencing <tt>uri</tt> instead of <tt>iri</tt>. The structure of a URI or URI-relative reference is identical. The programming interface differs in the character set permissible within an URI, i.e. <tt>string->uri</tt> signals an appropriate error, as do the setters like <tt>set-uri-host!</tt>.</p>
+<p>Identical programming interfaces to that of IRIs are given for URIs, with procedures and error messages renaming referencing <code>uri</code> instead of <code>iri</code>. The structure of a URI or URI-relative reference is identical. The programming interface differs in the character set permissible within an URI, i.e. <code>string->uri</code> signals an appropriate error, as do the setters like <code>set-uri-host!</code>.</p>
 
 <h3>Relative reference resolution</h3>
-<h4>Library: <tt>(srfi 275 normalise)</tt></h4>
+<h4>Library: <code>(srfi 275 normalise)</code></h4>
 
-<b>Procedure:</b> <tt>(resolve-iri-reference base ref)</tt><font color=grey>: non-relative-iri &rarr; iri &rarr; non-relative-iri</font><br>
+<b>Procedure:</b> <code>(resolve-iri-reference base ref)</code><span class="type-sig">: non-relative-iri &rarr; iri &rarr; non-relative-iri</span><br>
 
 <p>Relative reference resolution against a base IRI. An error is signalled if the base IRI is a relative reference. Relative reference resolution is, however, defined for both IRIs and relative references, although it is unusual to resolve a non-relative reference. This procedure is pure-functional as it (usually) involves transforming a relative reference into an IRI.</p>
-<p>Simple examples derived from the RDF Turtle test cases (see full test cases at end of document):
+<p>Simple examples derived from the RDF Turtle test cases (see full test cases at end of document):</p>
   <pre>
 (define string-cases (list "g:h" "g" "./g" "g/" "/g" "//g"))
 
@@ -290,70 +287,69 @@ example-IRI → &lt;/ex#IRI&gt;
         &lt;file:///a/bb/ccc/g&gt; &lt;file:///a/bb/ccc/g&gt; &lt;file:///a/bb/ccc/g/&gt;
         &lt;file:///g&gt; &lt;file://g&gt;)
   </pre>
-</p>
 
-<b>Procedure:</b> <tt>(resolve-uri-reference base ref)</tt><font color=grey>: non-relative-iri &rarr; iri &rarr; non-relative-iri</font><br>
+<b>Procedure:</b> <code>(resolve-uri-reference base ref)</code><span class="type-sig">: non-relative-iri &rarr; iri &rarr; non-relative-iri</span><br>
 
 <p>Relative reference resolution against a base URI. Behaviour is structurally identical to that of relative reference resolution for IRIs, as is the error behaviour with respect to base URI.</p>
 
 <h3>Normalisation</h3>
-<h4>Library: <tt>(srfi 275 normalise)</tt></h4>
+<h4>Library: <code>(srfi 275 normalise)</code></h4>
 
-<b>Procedure:</b> <tt>(normalise-iri-case ident)</tt><font color=grey>: iri &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(normalise-uri-case ident)</tt><font color=grey>: uri &rarr; uri</font><br>
+<b>Procedure:</b> <code>(normalise-iri-case ident)</code><span class="type-sig">: iri &rarr; iri</span><br>
+<b>Procedure:</b> <code>(normalise-uri-case ident)</code><span class="type-sig">: uri &rarr; uri</span><br>
 
 <p>Normalise case-insensitive components (scheme and host), and convert escaped characters (percent-encodings) to canonical upper-case. These procedures are pure-functional, returning the new identifier. These procedures are structurally identical for both IRIs and URIs, with the only difference being in that they signal an error if the argument is not an IRI or URI respectively. These procedures are also well-defined for IRI and URI-relative references respectively.</p>
 
-<b>Procedure:</b> <tt>(normalise-iri-escape ident)</tt><font color=grey>: iri &rarr; iri</font><br>
+<b>Procedure:</b> <code>(normalise-iri-escape ident)</code><span class="type-sig">: iri &rarr; iri</span><br>
 
-<p>Normalise an IRI or relative reference's escapes (percent-encodings), potentially interpreting escapes if part of valid UTF-8 octet sequences as characters. Conversely, characters which are not permissible within an IRI component will be encoded as a series of escapes corresponding to UTF-8 octets. These procedures are idempotent: a fully normalised IRI or relative reference will be normalised to itself, and <tt>iri-equal?</tt> will hold true between the two. This procedure is pure-functional and structure-preserving.</p>
+<p>Normalise an IRI or relative reference's escapes (percent-encodings), potentially interpreting escapes if part of valid UTF-8 octet sequences as characters. Conversely, characters which are not permissible within an IRI component will be encoded as a series of escapes corresponding to UTF-8 octets. These procedures are idempotent: a fully normalised IRI or relative reference will be normalised to itself, and <code>iri-equal?</code> will hold true between the two. This procedure is pure-functional and structure-preserving.</p>
 
-<b>Procedure:</b> <tt>(normalise-uri-escape ident)</tt><font color=grey>: uri &rarr; uri</font><br>
+<b>Procedure:</b> <code>(normalise-uri-escape ident)</code><span class="type-sig">: uri &rarr; uri</span><br>
 
 <p>Normalise an URI or relative reference's escapes (percent-encodings), potentially interpreting escapes as octets in U.S. ASCII. Conversely, characters which are not permissible within an URI component will be encoded as a series of escapes corresponding to UTF-8 octets. This procedure is pure-functional and structure-preserving.</p>
 
-<b>Procedure:</b> <tt>(normalise-iri-path-segments ident)</tt><font color=grey>: iri &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(normalise-uri-path-segments ident)</tt><font color=grey>: uri &rarr; uri</font><br>
+<b>Procedure:</b> <code>(normalise-iri-path-segments ident)</code><span class="type-sig">: iri &rarr; iri</span><br>
+<b>Procedure:</b> <code>(normalise-uri-path-segments ident)</code><span class="type-sig">: uri &rarr; uri</span><br>
 
-<p>Normalise path segments depending on the control segments <tt>.</tt> and <tt>..</tt>. While path segments of IRI or URI-relative references are not normalised, these procedures simply have no effect and no error is signalled, for parity with the other normalisation procedures. While it is relatively uncommon for relative paths to appear in non-relative IRIs or URIs, they are permissible e.g. within URN components. This procedure is pure-functional and structure-preserving.</p>
+<p>Normalise path segments depending on the control segments <code>.</code> and <code>..</code>. While path segments of IRI or URI-relative references are not normalised, these procedures simply have no effect and no error is signalled, for parity with the other normalisation procedures. While it is relatively uncommon for relative paths to appear in non-relative IRIs or URIs, they are permissible e.g. within URN components. This procedure is pure-functional and structure-preserving.</p>
 
-<b>Procedure:</b> <tt>(normalise-iri ident)</tt><font color=grey>: iri &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(normalise-uri ident)</tt><font color=grey>: uri &rarr; uri</font><br>
+<b>Procedure:</b> <code>(normalise-iri ident)</code><span class="type-sig">: iri &rarr; iri</span><br>
+<b>Procedure:</b> <code>(normalise-uri ident)</code><span class="type-sig">: uri &rarr; uri</span><br>
 
 <p>These procedures are essentially a sequence of the three normalisation procedures described previously, albeit the specific order is by escapes, by case and by path segments. These procedures are pure-functional and structure-preserving.</p>
 
 <!--                 -->
-<h4>Library: <tt>(srfi 275 normalise in-place)</tt></h4>
+<h4>Library: <code>(srfi 275 normalise in-place)</code></h4>
 
-<b>Procedure:</b> <tt>(normalise-iri-case! ident)</tt><font color=grey>: iri &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(normalise-uri-case! ident)</tt><font color=grey>: uri &rarr; ()</font><br>
+<b>Procedure:</b> <code>(normalise-iri-case! ident)</code><span class="type-sig">: iri &rarr; ()</span><br>
+<b>Procedure:</b> <code>(normalise-uri-case! ident)</code><span class="type-sig">: uri &rarr; ()</span><br>
 
-<p>In-place variants of <tt>normalise-iri-case</tt> and <tt>normalise-uri-case</tt>.</p>
+<p>In-place variants of <code>normalise-iri-case</code> and <code>normalise-uri-case</code>.</p>
 
-<b>Procedure:</b> <tt>(normalise-iri-escape! ident)</tt><font color=grey>: iri &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(normalise-uri-escape! ident)</tt><font color=grey>: uri &rarr; ()</font><br>
+<b>Procedure:</b> <code>(normalise-iri-escape! ident)</code><span class="type-sig">: iri &rarr; ()</span><br>
+<b>Procedure:</b> <code>(normalise-uri-escape! ident)</code><span class="type-sig">: uri &rarr; ()</span><br>
 
-<p>In-place variants of <tt>normalise-iri-escape</tt> and <tt>normalise-uri-escape</tt>.</p>
+<p>In-place variants of <code>normalise-iri-escape</code> and <code>normalise-uri-escape</code>.</p>
 
-<b>Procedure:</b> <tt>(normalise-iri-path-segments! ident)</tt><font color=grey>: iri &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(normalise-uri-path-segments! ident)</tt><font color=grey>: uri &rarr; ()</font><br>
+<b>Procedure:</b> <code>(normalise-iri-path-segments! ident)</code><span class="type-sig">: iri &rarr; ()</span><br>
+<b>Procedure:</b> <code>(normalise-uri-path-segments! ident)</code><span class="type-sig">: uri &rarr; ()</span><br>
 
-<p>In-place variants of <tt>normalise-iri-path-segments</tt> and <tt>normalise-uri-path-segments</tt>.</p>
+<p>In-place variants of <code>normalise-iri-path-segments</code> and <code>normalise-uri-path-segments</code>.</p>
 
-<b>Procedure:</b> <tt>(normalise-iri! ident)</tt><font color=grey>: iri &rarr; ()</font><br>
-<b>Procedure:</b> <tt>(normalise-uri! ident)</tt><font color=grey>: uri &rarr; ()</font><br>
+<b>Procedure:</b> <code>(normalise-iri! ident)</code><span class="type-sig">: iri &rarr; ()</span><br>
+<b>Procedure:</b> <code>(normalise-uri! ident)</code><span class="type-sig">: uri &rarr; ()</span><br>
 
-<p>In-place variants of <tt>normalise-iri</tt> and <tt>normalise-uri</tt>.</p>
+<p>In-place variants of <code>normalise-iri</code> and <code>normalise-uri</code>.</p>
 
 <h3>Equivalence and conversion</h3>
 
-<h4>Library: <tt>(srfi 275 iri)</tt></h4>
+<h4>Library: <code>(srfi 275 iri)</code></h4>
 
-<b>Procedure:</b> <tt>(string->iri str)</tt><font color=grey>: string &rarr; iri</font><br>
-<b>Procedure:</b> <tt>(iri->string ident)</tt><font color=grey>: iri &rarr; string</font><br>
-<p>Conversion from string to IRI or relative reference, and vice versa. <tt>string->iri</tt> is the fundamental constructor of IRIs and relative references.</p>
+<b>Procedure:</b> <code>(string->iri str)</code><span class="type-sig">: string &rarr; iri</span><br>
+<b>Procedure:</b> <code>(iri->string ident)</code><span class="type-sig">: iri &rarr; string</span><br>
+<p>Conversion from string to IRI or relative reference, and vice versa. <code>string->iri</code> is the fundamental constructor of IRIs and relative references.</p>
 
-<p>Examples:
+<p>Examples:</p>
   <pre>
 (define example-A (string->iri "http://example.org/some/where/place"))
 (define example-B (string->iri "urn:/some/where/place"))
@@ -361,409 +357,408 @@ example-IRI → &lt;/ex#IRI&gt;
 (iri->string example-A) → "http://example.org/some/where/place"
 (iri->string example-B) → "urn:/some/where/place"
   </pre>
-</p>
 
-<h4>Library: <tt>(srfi 275 uri)</tt></h4>
+<h4>Library: <code>(srfi 275 uri)</code></h4>
 
-<b>Procedure:</b> <tt>(string->uri str)</tt><font color=grey>: string &rarr; uri</font><br>
-<b>Procedure:</b> <tt>(uri->string ident)</tt><font color=grey>: uri &rarr; string</font><br>
-<p>Conversion from string to URI or relative reference, and vice versa. <tt>string->uri</tt> is the fundamental constructor of URIs and relative references. See the above examples for IRIs.</p>
+<b>Procedure:</b> <code>(string->uri str)</code><span class="type-sig">: string &rarr; uri</span><br>
+<b>Procedure:</b> <code>(uri->string ident)</code><span class="type-sig">: uri &rarr; string</span><br>
+<p>Conversion from string to URI or relative reference, and vice versa. <code>string->uri</code> is the fundamental constructor of URIs and relative references. See the above examples for IRIs.</p>
 
-<h4>Library: <tt>(srfi 275 normalise)</tt></h4>
+<h4>Library: <code>(srfi 275 normalise)</code></h4>
 
-<b>Procedure:</b> <tt>(iri-eqv? A B)</tt><font color=grey>: iri &rarr; iri &rarr; boolean</font><br>
+<b>Procedure:</b> <code>(iri-eqv? A B)</code><span class="type-sig">: iri &rarr; iri &rarr; boolean</span><br>
 
-<p>Two IRIs are equivalent if <tt>iri-equal?</tt> holds, or, post-normalisation with <tt>normalise-iri</tt>, <tt>iri-equal?</tt> holds. Similarly, two URIs are equivalent if <tt>uri-equal?</tt> holds, or, post-normalisation with <tt>normalise-uri</tt>, <tt>uri-equal?</tt> holds. It is an error to call <tt>iri-eqv?</tt> when either argument is not an IRI or relative reference. Similarly, it is an error to call <tt>uri-eqv?</tt> when either argument is not an URI or relative reference.</p>
+<p>Two IRIs are equivalent if <code>iri-equal?</code> holds, or, post-normalisation with <code>normalise-iri</code>, <code>iri-equal?</code> holds. Similarly, two URIs are equivalent if <code>uri-equal?</code> holds, or, post-normalisation with <code>normalise-uri</code>, <code>uri-equal?</code> holds. It is an error to call <code>iri-eqv?</code> when either argument is not an IRI or relative reference. Similarly, it is an error to call <code>uri-eqv?</code> when either argument is not an URI or relative reference.</p>
 
-<b>Procedure:</b> <tt>(iri->uri ident)</tt><font color=grey>: iri &rarr; uri</font><br>
-<p>Convert an IRI to an URI. This proceeds by encoding any character within certain ranges (see RFC 3987 ABNF <tt>ucschar</tt> and <tt>iprivate</tt>) to a series of escapes corresponding to those octets in UTF-8. This URI is also a valid IRI (albeit not normalised) as all URIs are valid IRIs. This procedure is structure-preserving: (non-relative) IRIs are never transformed into relative references, or vice-versa. It is an error to call this procedure where the argument is not an IRI or relative reference.</p>
+<b>Procedure:</b> <code>(iri->uri ident)</code><span class="type-sig">: iri &rarr; uri</span><br>
+<p>Convert an IRI to an URI. This proceeds by encoding any character within certain ranges (see RFC 3987 ABNF <code>ucschar</code> and <code>iprivate</code>) to a series of escapes corresponding to those octets in UTF-8. This URI is also a valid IRI (albeit not normalised) as all URIs are valid IRIs. This procedure is structure-preserving: (non-relative) IRIs are never transformed into relative references, or vice-versa. It is an error to call this procedure where the argument is not an IRI or relative reference.</p>
 
-<b>Procedure:</b> <tt>(uri->iri ident)</tt><font color=grey>: uri &rarr; iri</font><br>
+<b>Procedure:</b> <code>(uri->iri ident)</code><span class="type-sig">: uri &rarr; iri</span><br>
 <p>Convert an URI to an IRI. This procedure can be viewed as upgrading the URI structure to that of an IRI, then normalising it as an IRI. It is an error to call this procedure where the argument is not an URI or relative reference.</p>
 
 <h3>Test suite</h3>
 
 <p>In this section, we describe various test cases and the specific behaviour they evaluate. Because RFC 3986 and 3987 only provide examples for relative reference resolution, it is important to specify the exact behaviour of a correct implementation, especially with respect to normalisation. It is expected that these test cases could be the basis of a more comprehensive property-based test suite, e.g. test the entire range of reserved and unreserved characters in a particular URI component.</p>
 
-<h4>URI case normalisation test cases (<tt>normalise-uri-case</tt>)</h4>
+<h4>URI case normalisation test cases (<code>normalise-uri-case</code>)</h4>
 <dl class="test-cases">
   <dt>All lower-case preserved</dt>
-  <dd><tt>&lt;http://example.org/ex#test&gt;</tt>
-    &rarr; <tt>&lt;http://example.org/ex#test&gt;</tt></dd>
+  <dd><code>&lt;http://example.org/ex#test&gt;</code>
+    &rarr; <code>&lt;http://example.org/ex#test&gt;</code></dd>
   <dt>Mixed-case scheme to lower-case</dt>
-  <dd><tt>&lt;HttP://example.org/ex#test&gt;</tt>
-    &rarr; <tt>&lt;http://example.org/ex#test&gt;</tt></dd>
+  <dd><code>&lt;HttP://example.org/ex#test&gt;</code>
+    &rarr; <code>&lt;http://example.org/ex#test&gt;</code></dd>
   <dt>Mixed-case user preserved</dt>
-  <dd><tt>&lt;http://MySelf@example.org/Examp#test&gt;</tt>
-    &rarr; <tt>&lt;http://MySelf@example.org/Examp#test&gt;</tt></dd>
+  <dd><code>&lt;http://MySelf@example.org/Examp#test&gt;</code>
+    &rarr; <code>&lt;http://MySelf@example.org/Examp#test&gt;</code></dd>
   <dt>Mixed-case host to lower-case</dt>
-  <dd><tt>&lt;http://Example.ORG/ex#test&gt;</tt>
-    &rarr; <tt>&lt;http://example.org/ex#test&gt;</tt></dd>
+  <dd><code>&lt;http://Example.ORG/ex#test&gt;</code>
+    &rarr; <code>&lt;http://example.org/ex#test&gt;</code></dd>
   <dt>Mixed case path preserved</dt>
-  <dd><tt>&lt;http://example.org/Examp#test&gt;</tt>
-    &rarr; <tt>&lt;http://example.org/Examp#test&gt;</tt></dd>
+  <dd><code>&lt;http://example.org/Examp#test&gt;</code>
+    &rarr; <code>&lt;http://example.org/Examp#test&gt;</code></dd>
   <dt>Mixed case query preserved</dt>
-  <dd><tt>&lt;http://example.org/examp?Qua#test&gt;</tt>
-    &rarr; <tt>&lt;http://example.org/examp?Qua#test&gt;</tt></dd>
+  <dd><code>&lt;http://example.org/examp?Qua#test&gt;</code>
+    &rarr; <code>&lt;http://example.org/examp?Qua#test&gt;</code></dd>
   <dt>Mixed case fragment preserved</dt>
-  <dd><tt>&lt;http://example.org/examp#TeSt&gt;</tt>
-    &rarr; <tt>&lt;http://example.org/examp#TeSt&gt;</tt></dd>
+  <dd><code>&lt;http://example.org/examp#TeSt&gt;</code>
+    &rarr; <code>&lt;http://example.org/examp#TeSt&gt;</code></dd>
   <dt>User percent-encodings to upper-case</dt>
-  <dd><tt>&lt;http://%aA@%AA%AB%AC%AD%AE/some/where/place&gt;</tt>
-    &rarr; <tt>&lt;http://%AA@%AA%AB%AC%AD%AE/some/where/place&gt;</tt></dd>
+  <dd><code>&lt;http://%aA@%AA%AB%AC%AD%AE/some/where/place&gt;</code>
+    &rarr; <code>&lt;http://%AA@%AA%AB%AC%AD%AE/some/where/place&gt;</code></dd>
   <dt>Host percent-encodings to upper-case</dt>
-  <dd><tt>&lt;http://%aa%Ab%AC%aD%AE/some/where/place&gt;</tt>
-    &rarr; <tt>&lt;http://%AA%AB%AC%AD%AE/some/where/place&gt;</tt></dd>
+  <dd><code>&lt;http://%aa%Ab%AC%aD%AE/some/where/place&gt;</code>
+    &rarr; <code>&lt;http://%AA%AB%AC%AD%AE/some/where/place&gt;</code></dd>
   <dt>Path percent-encodings to upper-case</dt>
-  <dd><tt>&lt;http://myname@example.org/%Fa/%FB/%fC&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/%FA/%FB/%FC&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/%Fa/%FB/%fC&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/%FA/%FB/%FC&gt;</code></dd>
   <dt>Query percent-encodings to upper-case</dt>
-  <dd><tt>&lt;http://myname@example.org/%FA/%FB/%FC?%ff&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/%FA/%FB/%FC?%FF&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/%FA/%FB/%FC?%ff&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/%FA/%FB/%FC?%FF&gt;</code></dd>
   <dt>Fragment percent-encodings to upper-case</dt>
-  <dd><tt>&lt;http://myname@example.org/%FA/%FB/%FC#%ff&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/%FA/%FB/%FC#%FF&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/%FA/%FB/%FC#%ff&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/%FA/%FB/%FC#%FF&gt;</code></dd>
 </dl>
 
-<h4>IRI case normalisation test cases (<tt>normalise-iri-case</tt>)</h4>
+<h4>IRI case normalisation test cases (<code>normalise-iri-case</code>)</h4>
 <dl class="test-cases">
   <dt>Host non-U.S. ASCII is case-sensitive</dt>
-  <dd><tt>&lt;http://CRÊPES.example.org&gt;</tt>
-    &rarr; <tt>&lt;http://crÊpes.example.org&gt;</tt>
+  <dd><code>&lt;http://CRÊPES.example.org&gt;</code>
+    &rarr; <code>&lt;http://crÊpes.example.org&gt;</code>
     <span class="remark">No equivalent for scheme as that only contains ASCII even in IRIs</span></dd>
 </dl>
 
-<h4>URI escape (percent-encoding) normalisation test cases (<tt>normalise-uri-escape</tt>)</h4>
+<h4>URI escape (percent-encoding) normalisation test cases (<code>normalise-uri-escape</code>)</h4>
 <dl class="test-cases">
   <dt>User reserved character not escaped</dt>
-  <dd><tt>&lt;http://my!name@example.org/ex#test&gt;</tt>
-    &rarr; <tt>&lt;http://my!name@example.org/ex#test&gt;</tt></dd>
+  <dd><code>&lt;http://my!name@example.org/ex#test&gt;</code>
+    &rarr; <code>&lt;http://my!name@example.org/ex#test&gt;</code></dd>
   <dt>Host reserved character not escaped</dt>
-  <dd><tt>&lt;http://myname@!example.org/ex#test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@!example.org/ex#test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@!example.org/ex#test&gt;</code>
+    &rarr; <code>&lt;http://myname@!example.org/ex#test&gt;</code></dd>
   <dt>Path reserved character not escaped</dt>
-  <dd><tt>&lt;http://myname@example.org/ex!#test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/ex!#test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/ex!#test&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/ex!#test&gt;</code></dd>
   <dt>Query reserved character not escaped</dt>
-  <dd><tt>&lt;http://myname@example.org/ex?!a#test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/ex?!a#test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/ex?!a#test&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/ex?!a#test&gt;</code></dd>
   <dt>Fragment reserved character not escaped</dt>
-  <dd><tt>&lt;http://myname@example.org/ex?a#!test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/ex?a#!test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/ex?a#!test&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/ex?a#!test&gt;</code></dd>
   <dt>User reserved escape not decoded</dt>
-  <dd><tt>&lt;http://my%40name@example.org/ex#test&gt;</tt>
-    &rarr; <tt>&lt;http://my%40name@example.org/ex#test&gt;</tt></dd>
+  <dd><code>&lt;http://my%40name@example.org/ex#test&gt;</code>
+    &rarr; <code>&lt;http://my%40name@example.org/ex#test&gt;</code></dd>
   <dt>Host reserved escape not decoded</dt>
-  <dd><tt>&lt;http://myname@ex%40ample.org/ex#test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@ex%40ample.org/ex#test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@ex%40ample.org/ex#test&gt;</code>
+    &rarr; <code>&lt;http://myname@ex%40ample.org/ex#test&gt;</code></dd>
   <dt>Path reserved escape not decoded</dt>
-  <dd><tt>&lt;http://myname@example.org/e%40x#test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/e%40x#test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/e%40x#test&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/e%40x#test&gt;</code></dd>
   <dt>Query reserved escape not decoded</dt>
-  <dd><tt>&lt;http://myname@example.org/ex?a%40#test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/ex?a%40#test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/ex?a%40#test&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/ex?a%40#test&gt;</code></dd>
   <dt>Fragment reserved escape not decoded</dt>
-  <dd><tt>&lt;http://myname@example.org/ex?a#t%40est&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/ex?a#t%40est&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/ex?a#t%40est&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/ex?a#t%40est&gt;</code></dd>
   <dt>User permissible escape decoded</dt>
-  <dd><tt>&lt;http://my%2Ename@example.org/ex?a#test&gt;</tt>
-    &rarr; <tt>&lt;http://my.name@example.org/ex?a#test&gt;</tt></dd>
+  <dd><code>&lt;http://my%2Ename@example.org/ex?a#test&gt;</code>
+    &rarr; <code>&lt;http://my.name@example.org/ex?a#test&gt;</code></dd>
   <dt>Host permissible escape decoded</dt>
-  <dd><tt>&lt;http://myname@example%2Eorg/ex?a#test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/ex?a#test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example%2Eorg/ex?a#test&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/ex?a#test&gt;</code></dd>
   <dt>Path permissible escape decoded</dt>
-  <dd><tt>&lt;http://myname@example.org/misc%2Etxt#test&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/misc.txt#test&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/misc%2Etxt#test&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/misc.txt#test&gt;</code></dd>
   <dt>Query permissible escape decoded</dt>
-  <dd><tt>&lt;http://myname@example.org/misc.txt?%2E%2E%2E&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/misc.txt?...&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/misc.txt?%2E%2E%2E&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/misc.txt?...&gt;</code></dd>
   <dt>Fragment permissible escape decoded</dt>
-  <dd><tt>&lt;http://myname@example.org/misc.txt#line%31%30&gt;</tt>
-    &rarr; <tt>&lt;http://myname@example.org/misc.txt#line10&gt;</tt></dd>
+  <dd><code>&lt;http://myname@example.org/misc.txt#line%31%30&gt;</code>
+    &rarr; <code>&lt;http://myname@example.org/misc.txt#line10&gt;</code></dd>
   <dt>User illegal characters are escaped</dt>
-  <dd><tt>&lt;http://dosh£@crepes.example.org&gt;</tt>
-    &rarr; <tt>&lt;http://dosh%C2%A3@crepes.example.org&gt;</tt></dd>
+  <dd><code>&lt;http://dosh£@crepes.example.org&gt;</code>
+    &rarr; <code>&lt;http://dosh%C2%A3@crepes.example.org&gt;</code></dd>
   <dt>Host illegal characters are escaped</dt>
-  <dd><tt>&lt;http://crêpes.example.org&gt;</tt>
-    &rarr; <tt>&lt;http://cr%C3%AApes.example.org&gt;</tt></dd>
+  <dd><code>&lt;http://crêpes.example.org&gt;</code>
+    &rarr; <code>&lt;http://cr%C3%AApes.example.org&gt;</code></dd>
   <dt>Path illegal characters are escaped</dt>
-  <dd><tt>&lt;http://crepes.example.org/in/Rhône&gt;</tt>
-    &rarr; <tt>&lt;http://crepes.example.org/in/Rh%C3%B4ne&gt;</tt></dd>
+  <dd><code>&lt;http://crepes.example.org/in/Rhône&gt;</code>
+    &rarr; <code>&lt;http://crepes.example.org/in/Rh%C3%B4ne&gt;</code></dd>
   <dt>Query illegal characters are escaped</dt>
-  <dd><tt>&lt;http://crepes.example.org/in/Rennes?Dim.‥Sam.&gt;</tt>
-    &rarr; <tt>&lt;http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam.&gt;</tt></dd>
+  <dd><code>&lt;http://crepes.example.org/in/Rennes?Dim.‥Sam.&gt;</code>
+    &rarr; <code>&lt;http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam.&gt;</code></dd>
   <dt>Fragment illegal characters are escaped</dt>
-  <dd><tt>&lt;http://crepes.example.org/in/Rennes#L'Étage&gt;</tt>
-    &rarr; <tt>&lt;http://crepes.example.org/in/Rennes#L'%C3%89tage&gt;</tt></dd>
+  <dd><code>&lt;http://crepes.example.org/in/Rennes#L'Étage&gt;</code>
+    &rarr; <code>&lt;http://crepes.example.org/in/Rennes#L'%C3%89tage&gt;</code></dd>
 </dl>
 
-<h4>IRI escape normalisation test cases (<tt>normalise-iri-escape</tt>)</h4>
+<h4>IRI escape normalisation test cases (<code>normalise-iri-escape</code>)</h4>
 <dl class="test-cases">
   <dt>User permissible escape decoded</dt>
-  <dd><tt>&lt;http://dosh%C2%A3@crepes.example.org&gt;</tt>
-    &rarr; <tt>&lt;http://dosh£@crepes.example.org&gt;</tt></dd>
+  <dd><code>&lt;http://dosh%C2%A3@crepes.example.org&gt;</code>
+    &rarr; <code>&lt;http://dosh£@crepes.example.org&gt;</code></dd>
   <dt>Host permissible escape decoded</dt>
-  <dd><tt>&lt;http://cr%C3%AApes.example.org&gt;</tt>
-    &rarr; <tt>&lt;http://crêpes.example.org&gt;</tt></dd>
+  <dd><code>&lt;http://cr%C3%AApes.example.org&gt;</code>
+    &rarr; <code>&lt;http://crêpes.example.org&gt;</code></dd>
   <dt>Path illegal characters are escaped</dt>
-  <dd><tt>&lt;http://crepes.example.org/in/Rh%C3%B4ne&gt;</tt>
-    &rarr; <tt>&lt;http://crepes.example.org/in/Rhône&gt;</tt></dd>
+  <dd><code>&lt;http://crepes.example.org/in/Rh%C3%B4ne&gt;</code>
+    &rarr; <code>&lt;http://crepes.example.org/in/Rhône&gt;</code></dd>
   <dt>Query illegal characters are escaped</dt>
-  <dd><tt>&lt;http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam.&gt;</tt>
-    &rarr; <tt>&lt;http://crepes.example.org/in/Rennes?Dim.‥Sam.&gt;</tt></dd>
+  <dd><code>&lt;http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam.&gt;</code>
+    &rarr; <code>&lt;http://crepes.example.org/in/Rennes?Dim.‥Sam.&gt;</code></dd>
   <dt>Fragment illegal characters are escaped</dt>
-  <dd><tt>&lt;http://crepes.example.org/in/Rennes#L'%C3%89tage&gt;</tt>
-    &rarr; <tt>&lt;http://crepes.example.org/in/Rennes#L'Étage&gt;</tt></dd>
+  <dd><code>&lt;http://crepes.example.org/in/Rennes#L'%C3%89tage&gt;</code>
+    &rarr; <code>&lt;http://crepes.example.org/in/Rennes#L'Étage&gt;</code></dd>
   <dt>Wholly escaped wholly decoded</dt>
-  <dd><tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt>
-    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></dd>
+  <dd><code>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</code>
+    &rarr; <code>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</code></dd>
   <dt>Partially normalised wholly decoded</dt>
-  <dd><tt>&lt;https://example.org/music/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt>
-    &rarr; <tt>&lt;https://example.org/music/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt></dd>
+  <dd><code>&lt;https://example.org/music/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</code>
+    &rarr; <code>&lt;https://example.org/music/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</code></dd>
   <dt>Wholly normalised not reencoded</dt>
-  <dd><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
-    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></dd>
+  <dd><code>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</code>
+    &rarr; <code>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</code></dd>
   <dt>Repeated normalisation (idempotence)</dt>
-  <dd><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
-    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
-    <span class="remark">In this test case, <tt>normalise-iri-escape</tt> should be called multiple times, i.e. <tt>(compose normalise-iri-escape normalise-iri-escape)</tt></span></dd>
+  <dd><code>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</code>
+    &rarr; <code>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</code>
+    <span class="remark">In this test case, <code>normalise-iri-escape</code> should be called multiple times, i.e. <code>(compose normalise-iri-escape normalise-iri-escape)</code></span></dd>
 </dl>
 
-<h4>Path normalisation test cases (<tt>normalise-uri-path-segments</tt> and <tt>normalise-iri-path-segments</tt>)</h4>
+<h4>Path normalisation test cases (<code>normalise-uri-path-segments</code> and <code>normalise-iri-path-segments</code>)</h4>
 <dl class="test-cases">
   <dt>Absolute path without dotted segments unchanged</dt>
-  <dd><tt>&lt;http://example.org/some/where/place&gt;</tt>
-    &rarr; <tt>&lt;http://example.org/some/where/place&gt;</tt></dd>
+  <dd><code>&lt;http://example.org/some/where/place&gt;</code>
+    &rarr; <code>&lt;http://example.org/some/where/place&gt;</code></dd>
   <dt>No authority absolute path without dotted segments unchanged</dt>
-  <dd><tt>&lt;urn:/some/where/place&gt;</tt>
-    &rarr; <tt>&lt;urn:/some/where/place&gt;</tt></dd>
+  <dd><code>&lt;urn:/some/where/place&gt;</code>
+    &rarr; <code>&lt;urn:/some/where/place&gt;</code></dd>
   <dt>Relative path without dotted segments unchanged</dt>
-  <dd><tt>&lt;urn:some/where/place&gt;</tt>
-    &rarr; <tt>&lt;urn:some/where/place&gt;</tt></dd>
+  <dd><code>&lt;urn:some/where/place&gt;</code>
+    &rarr; <code>&lt;urn:some/where/place&gt;</code></dd>
   <dt>Absolute path eliminates single dotted segments</dt>
-  <dd><tt>&lt;urn:/some/./where/././place/./&gt;</tt>
-    &rarr; <tt>&lt;urn:/some/where/place/&gt;</tt></dd>
+  <dd><code>&lt;urn:/some/./where/././place/./&gt;</code>
+    &rarr; <code>&lt;urn:/some/where/place/&gt;</code></dd>
   <dt>Relative path eliminates single dotted segments</dt>
-  <dd><tt>&lt;urn:some/./where/././place/./&gt;</tt>
-    &rarr; <tt>&lt;urn:some/where/place/&gt;</tt></dd>
+  <dd><code>&lt;urn:some/./where/././place/./&gt;</code>
+    &rarr; <code>&lt;urn:some/where/place/&gt;</code></dd>
   <dt>Absolute path empty segments treated like non-empty</dt>
-  <dd><tt>&lt;urn:/some//where//place//&gt;</tt>
-    &rarr; <tt>&lt;urn:/some//where//place//&gt;</tt></dd>
+  <dd><code>&lt;urn:/some//where//place//&gt;</code>
+    &rarr; <code>&lt;urn:/some//where//place//&gt;</code></dd>
   <dt>Relative path empty segments treated like non-empty</dt>
-  <dd><tt>&lt;urn:some//where//place//&gt;</tt>
-    &rarr; <tt>&lt;urn:some//where//place//&gt;</tt></dd>
+  <dd><code>&lt;urn:some//where//place//&gt;</code>
+    &rarr; <code>&lt;urn:some//where//place//&gt;</code></dd>
   <dt>Single leading slash not normalised</dt>
-  <dd><tt>&lt;/&gt;</tt>
-    &rarr; <tt>&lt;/&gt;</tt></dd>
+  <dd><code>&lt;/&gt;</code>
+    &rarr; <code>&lt;/&gt;</code></dd>
   <dt>Multiple leading slashes not normalised</dt>
-  <dd><tt>&lt;//&gt;</tt>
-    &rarr; <tt>&lt;//&gt;</tt></dd>
+  <dd><code>&lt;//&gt;</code>
+    &rarr; <code>&lt;//&gt;</code></dd>
   <dt>Absolute path reference not normalised (double-dot)</dt>
-  <dd><tt>&lt;/a/b/../../c&gt;</tt>
-    &rarr; <tt>&lt;/a/b/../../c&gt;</tt></dd>
+  <dd><code>&lt;/a/b/../../c&gt;</code>
+    &rarr; <code>&lt;/a/b/../../c&gt;</code></dd>
   <dt>Absolute path reference not normalised (single-dot)</dt>
-  <dd><tt>&lt;/a/b/././c&gt;</tt>
-    &rarr; <tt>&lt;/a/b/././c&gt;</tt></dd>
+  <dd><code>&lt;/a/b/././c&gt;</code>
+    &rarr; <code>&lt;/a/b/././c&gt;</code></dd>
   <dt>Absolute path reference not normalised (mixed dotted)</dt>
-  <dd><tt>&lt;/a/b/../c/././d&gt;</tt>
-    &rarr; <tt>&lt;/a/b/../c/././d&gt;</tt></dd>
+  <dd><code>&lt;/a/b/../c/././d&gt;</code>
+    &rarr; <code>&lt;/a/b/../c/././d&gt;</code></dd>
   <dt>Relative path reference not normalised (double-dot)</dt>
-  <dd><tt>&lt;a/b/../../c&gt;</tt>
-    &rarr; <tt>&lt;a/b/../../c&gt;</tt></dd>
+  <dd><code>&lt;a/b/../../c&gt;</code>
+    &rarr; <code>&lt;a/b/../../c&gt;</code></dd>
   <dt>Relative path reference not normalised (single-dot)</dt>
-  <dd><tt>&lt;a/b/././c&gt;</tt>
-    &rarr; <tt>&lt;a/b/././c&gt;</tt></dd>
+  <dd><code>&lt;a/b/././c&gt;</code>
+    &rarr; <code>&lt;a/b/././c&gt;</code></dd>
   <dt>Relative path reference not normalised (mixed dotted)</dt>
-  <dd><tt>&lt;a/b/../c/././d&gt;</tt>
-    &rarr; <tt>&lt;a/b/../c/././d&gt;</tt></dd>
+  <dd><code>&lt;a/b/../c/././d&gt;</code>
+    &rarr; <code>&lt;a/b/../c/././d&gt;</code></dd>
   <dt>1-segment path reference with leading dot not normalised</dt>
-  <dd><tt>&lt;./def&gt;</tt>
-    &rarr; <tt>&lt;./def&gt;</tt></dd>
+  <dd><code>&lt;./def&gt;</code>
+    &rarr; <code>&lt;./def&gt;</code></dd>
   <dt>1-segment path reference with leading dot not normalised (colon)</dt>
-  <dd><tt>&lt;./abc:def&gt;</tt>
-    &rarr; <tt>&lt;./abc:def&gt;</tt></dd>
+  <dd><code>&lt;./abc:def&gt;</code>
+    &rarr; <code>&lt;./abc:def&gt;</code></dd>
   <dt>Additional relative path case not normalised</dt>
-  <dd><tt>&lt;../../abc/./def&gt;</tt>
-    &rarr; <tt>&lt;../../abc/./def&gt;</tt></dd>
+  <dd><code>&lt;../../abc/./def&gt;</code>
+    &rarr; <code>&lt;../../abc/./def&gt;</code></dd>
   <dt>Relative path must not be normalised to an absolute path</dt>
-  <dd><tt>&lt;foo:a/b/../.././../../e&gt;</tt>
-    &rarr; <tt>&lt;foo:e&gt;</tt>
-    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dd><code>&lt;foo:a/b/../.././../../e&gt;</code>
+    &rarr; <code>&lt;foo:e&gt;</code>
+    <span class="remark">From Haskell <code>network-uri</code> <a href="#hs-network-uri">[3]</a></span></dd>
   <dt>Empty segments eliminated like non-empty (1)</dt>
-  <dd><tt>&lt;http://example.com////../..&gt;</tt>
-    &rarr; <tt>&lt;http://example.com//&gt;</tt>
+  <dd><code>&lt;http://example.com////../..&gt;</code>
+    &rarr; <code>&lt;http://example.com//&gt;</code>
     <span class="remark">From Webkit <a href="#webkit">[5]</a></span></dd>
   <dt>Empty segments eliminated like non-empty (2)</dt>
-  <dd><tt>&lt;http://example.com/foo/bar//../..&gt;</tt>
-    &rarr; <tt>&lt;http://example.com/foo/&gt;</tt>
+  <dd><code>&lt;http://example.com/foo/bar//../..&gt;</code>
+    &rarr; <code>&lt;http://example.com/foo/&gt;</code>
     <span class="remark">From Webkit <a href="#webkit">[5]</a></span></dd>
   <dt>Empty segments eliminated like non-empty (3)</dt>
-  <dd><tt>&lt;http://example.com/foo/bar//..&gt;</tt>
-    &rarr; <tt>&lt;http://example.com/foo/bar/&gt;</tt>
+  <dd><code>&lt;http://example.com/foo/bar//..&gt;</code>
+    &rarr; <code>&lt;http://example.com/foo/bar/&gt;</code>
     <span class="remark">From Webkit <a href="#webkit">[5]</a></span></dd>
   <dt>General test case 1</dt>
-  <dd><tt>&lt;http://example/a/b/../../c&gt;</tt>
-    &rarr; <tt>&lt;http://example/c&gt;</tt>
-    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dd><code>&lt;http://example/a/b/../../c&gt;</code>
+    &rarr; <code>&lt;http://example/c&gt;</code>
+    <span class="remark">From Haskell <code>network-uri</code> <a href="#hs-network-uri">[3]</a></span></dd>
   <dt>General test case 2</dt>
-  <dd><tt>&lt;http://example/a/b/c/../../&gt;</tt>
-    &rarr; <tt>&lt;http://example/a/&gt;</tt>
-    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dd><code>&lt;http://example/a/b/c/../../&gt;</code>
+    &rarr; <code>&lt;http://example/a/&gt;</code>
+    <span class="remark">From Haskell <code>network-uri</code> <a href="#hs-network-uri">[3]</a></span></dd>
   <dt>General test case 3</dt>
-  <dd><tt>&lt;http://example/a/b/c/./&gt;</tt>
-    &rarr; <tt>&lt;http://example/a/b/c/&gt;</tt>
-    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dd><code>&lt;http://example/a/b/c/./&gt;</code>
+    &rarr; <code>&lt;http://example/a/b/c/&gt;</code>
+    <span class="remark">From Haskell <code>network-uri</code> <a href="#hs-network-uri">[3]</a></span></dd>
   <dt>General test case 4</dt>
-  <dd><tt>&lt;http://example/a/b/c/.././&gt;</tt>
-    &rarr; <tt>&lt;http://example/a/b/&gt;</tt>
-    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dd><code>&lt;http://example/a/b/c/.././&gt;</code>
+    &rarr; <code>&lt;http://example/a/b/&gt;</code>
+    <span class="remark">From Haskell <code>network-uri</code> <a href="#hs-network-uri">[3]</a></span></dd>
   <dt>General test case 5</dt>
-  <dd><tt>&lt;http://example/a/b/c/d/../../../../e&gt;</tt>
-    &rarr; <tt>&lt;http://example/e&gt;</tt>
-    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dd><code>&lt;http://example/a/b/c/d/../../../../e&gt;</code>
+    &rarr; <code>&lt;http://example/e&gt;</code>
+    <span class="remark">From Haskell <code>network-uri</code> <a href="#hs-network-uri">[3]</a></span></dd>
   <dt>General test case 6</dt>
-  <dd><tt>&lt;http://example/a/b/c/d/../.././../../e&gt;</tt>
-    &rarr; <tt>&lt;http://example/e&gt;</tt>
-    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dd><code>&lt;http://example/a/b/c/d/../.././../../e&gt;</code>
+    &rarr; <code>&lt;http://example/e&gt;</code>
+    <span class="remark">From Haskell <code>network-uri</code> <a href="#hs-network-uri">[3]</a></span></dd>
   <dt>General test case 7</dt>
-  <dd><tt>&lt;http://example/a/b/../.././../../e&gt;</tt>
-    &rarr; <tt>&lt;http://example/e&gt;</tt>
-    <span class="remark">From Haskell <tt>network-uri</tt> <a href="#hs-network-uri">[3]</a></span></dd>
+  <dd><code>&lt;http://example/a/b/../.././../../e&gt;</code>
+    &rarr; <code>&lt;http://example/e&gt;</code>
+    <span class="remark">From Haskell <code>network-uri</code> <a href="#hs-network-uri">[3]</a></span></dd>
 </dl>
 
-<h4>URI to IRI conversion (<tt>uri->iri</tt>)</h4>
+<h4>URI to IRI conversion (<code>uri->iri</code>)</h4>
 <dl class="test-cases">
   <dt>Wholly escaped path normalised</dt>
-  <dd><tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt>
-    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt></dd>
+  <dd><code>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</code>
+    &rarr; <code>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</code></dd>
   <dt>Partially escaped path normalised</dt>
-  <dd><tt>&lt;https://example.org/ceol/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt>
-    &rarr; <tt>&lt;https://example.org/ceol/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt></dd>
+  <dd><code>&lt;https://example.org/ceol/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</code>
+    &rarr; <code>&lt;https://example.org/ceol/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</code></dd>
 </dl>
 
-<h4>IRI to URI conversion (<tt>iri->uri</tt>)</h4>
+<h4>IRI to URI conversion (<code>iri->uri</code>)</h4>
 <dl class="test-cases">
   <dt>Wholly escaped path normalised</dt>
-  <dd><tt>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</tt>
-    &rarr; <tt>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</tt></dd>
+  <dd><code>&lt;https://en.wiktionary.org/wiki/Ῥόδος&gt;</code>
+    &rarr; <code>&lt;https://en.wiktionary.org/wiki/%E1%BF%AC%CF%8C%CE%B4%CE%BF%CF%82&gt;</code></dd>
   <dt>Partially escapable path escaped</dt>
-  <dd><tt>&lt;https://example.org/ceol/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</tt>
-    &rarr; <tt>&lt;https://example.org/ceol/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</tt></dd>
+  <dd><code>&lt;https://example.org/ceol/Éirigh'sCuirOrtDoChuidÉadaigh&gt;</code>
+    &rarr; <code>&lt;https://example.org/ceol/%C3%89irigh'sCuirOrtDoChuid%C3%89adaigh&gt;</code></dd>
 </dl>
 
 <h4>Parsing expected segments</h4>
 <div class="overflow-x">
 <table class="parsing-segments">
   <tr><th>scheme</th><th>user</th><th>host</th><th>port</th><th>path</th><th>query</th><th>fragment</th></tr>
-  <tr class="case-label"><td colspan="7">Empty URI: <tt>&lt;&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Empty authority: <tt>&lt;//&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Empty user: <tt>&lt;//@&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Empty port: <tt>&lt;//:&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Empty query: <tt>&lt;?&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Empty fragment: <tt>&lt;#&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Path which looks like a hostname: <tt>&lt;example.org&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">URN-like: <tt>&lt;urn:something&gt;</tt></td></tr>
-  <tr><td><tt>"urn"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"something"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">URN-like, path looks like hostname: <tt>&lt;urn:example.org&gt;</tt></td></tr>
-  <tr><td><tt>"urn"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Path which looks like a URN: <tt>&lt;./urn:something&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"./urn:something"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">User with colon segment: <tt>&lt;http://a:b@c:29&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>"a:b"</tt></td><td><tt>"c"</tt></td><td><tt>29</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">User-like component appears as path: <tt>&lt;http::@c:29&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>":@c:29"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Host-like component appears as user: <tt>&lt;http://example.org:b@d/&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>"example.org:b"</tt></td><td><tt>"d"</tt></td><td><tt>#f</tt></td><td><tt>"/"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Padded port as numeric value: <tt>&lt;http://example.org:000080&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Query component with question mark: <tt>&lt;http://example.org/abcd?efgh?ijkl&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>"/abcd"</tt></td><td><tt>"efgh?ijkl"</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Fragment component with question mark: <tt>&lt;http://example.org/abcd#efgh?ijkl&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>"/abcd"</tt></td><td><tt>#f</tt></td><td><tt>"efgh?ijkl"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Path where first segment looks like host: <tt>&lt;http:///some/where/place&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Scheme with nil host: <tt>&lt;foo:&gt;</tt></td></tr>
-  <tr><td><tt>"foo"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Scheme with path, empty host: <tt>&lt;foo:////g&gt;</tt></td></tr>
-  <tr><td><tt>"foo"</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"//g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Scheme with path, nil host: <tt>&lt;foo:.///g&gt;</tt></td></tr>
-  <tr><td><tt>"foo"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>".///g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Scheme with non-empty host: <tt>&lt;foo://g&gt;</tt></td></tr>
-  <tr><td><tt>"foo"</tt></td><td><tt>#f</tt></td><td><tt>"g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">All components filled out: <tt>&lt;http://user@example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">All components except user filled out: <tt>&lt;http://example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">All components except host filled out: <tt>&lt;http://user@:80/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>#f</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">All components except port filled out: <tt>&lt;http://user@example.org/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">All components except path filled out: <tt>&lt;http://user@example.org:80?qua#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>#f</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">All components except query filled out: <tt>&lt;http://user@example.org:80/some/where/place#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>#f</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">All components except fragment filled out: <tt>&lt;http://user@example.org:80/some/where/place?qua&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Empty host, nil user/port: <tt>&lt;http:///some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Empty user, nil host/port: <tt>&lt;http://@/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Empty port implies empty host: <tt>&lt;http://:/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, nil host: <tt>&lt;////g&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"//g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, path, nil host: <tt>&lt;.///g&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>".///g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, non-empty host: <tt>&lt;//g&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>"g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Path which looks like a query: <tt>&lt;./p=q:r&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"./p=q:r"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, all components filled out: <tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, all components except user filled out: <tt>&lt;//example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, all components except host filled out: <tt>&lt;//user@:80/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>#f</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, all components except port filled out: <tt>&lt;//user@example.org/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, all components except path filled out: <tt>&lt;//user@example.org:80?qua#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>#f</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, all components except query filled out: <tt>&lt;//user@example.org:80/some/where/place#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>#f</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference, all components except fragment filled out: <tt>&lt;//user@example.org:80/some/where/place?qua&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>#f</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference empty host, nil user/port: <tt>&lt;///some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference empty user, nil host/port: <tt>&lt;//@/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
-  <tr class="case-label"><td colspan="7">Relative reference empty port implies empty host: <tt>&lt;//:/some/where/place?qua#ought&gt;</tt></td></tr>
-  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty URI: <code>&lt;&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Empty authority: <code>&lt;//&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Empty user: <code>&lt;//@&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>""</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Empty port: <code>&lt;//:&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Empty query: <code>&lt;?&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Empty fragment: <code>&lt;#&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>""</code></td></tr>
+  <tr class="case-label"><td colspan="7">Path which looks like a hostname: <code>&lt;example.org&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>"example.org"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">URN-like: <code>&lt;urn:something&gt;</code></td></tr>
+  <tr><td><code>"urn"</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>"something"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">URN-like, path looks like hostname: <code>&lt;urn:example.org&gt;</code></td></tr>
+  <tr><td><code>"urn"</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>"example.org"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Path which looks like a URN: <code>&lt;./urn:something&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>"./urn:something"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">User with colon segment: <code>&lt;http://a:b@c:29&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>"a:b"</code></td><td><code>"c"</code></td><td><code>29</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">User-like component appears as path: <code>&lt;http::@c:29&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>":@c:29"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Host-like component appears as user: <code>&lt;http://example.org:b@d/&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>"example.org:b"</code></td><td><code>"d"</code></td><td><code>#f</code></td><td><code>"/"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Padded port as numeric value: <code>&lt;http://example.org:000080&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>#f</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Query component with question mark: <code>&lt;http://example.org/abcd?efgh?ijkl&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>#f</code></td><td><code>"example.org"</code></td><td><code>#f</code></td><td><code>"/abcd"</code></td><td><code>"efgh?ijkl"</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Fragment component with question mark: <code>&lt;http://example.org/abcd#efgh?ijkl&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>#f</code></td><td><code>"example.org"</code></td><td><code>#f</code></td><td><code>"/abcd"</code></td><td><code>#f</code></td><td><code>"efgh?ijkl"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Path where first segment looks like host: <code>&lt;http:///some/where/place&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Scheme with nil host: <code>&lt;foo:&gt;</code></td></tr>
+  <tr><td><code>"foo"</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Scheme with path, empty host: <code>&lt;foo:////g&gt;</code></td></tr>
+  <tr><td><code>"foo"</code></td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>"//g"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Scheme with path, nil host: <code>&lt;foo:.///g&gt;</code></td></tr>
+  <tr><td><code>"foo"</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>".///g"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Scheme with non-empty host: <code>&lt;foo://g&gt;</code></td></tr>
+  <tr><td><code>"foo"</code></td><td><code>#f</code></td><td><code>"g"</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">All components filled out: <code>&lt;http://user@example.org:80/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">All components except user filled out: <code>&lt;http://example.org:80/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>#f</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">All components except host filled out: <code>&lt;http://user@:80/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>"user"</code></td><td><code>#f</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">All components except port filled out: <code>&lt;http://user@example.org/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">All components except path filled out: <code>&lt;http://user@example.org:80?qua#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>#f</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">All components except query filled out: <code>&lt;http://user@example.org:80/some/where/place#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>#f</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">All components except fragment filled out: <code>&lt;http://user@example.org:80/some/where/place?qua&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Empty host, nil user/port: <code>&lt;http:///some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Empty user, nil host/port: <code>&lt;http://@/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Empty port implies empty host: <code>&lt;http://:/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td><code>"http"</code></td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, nil host: <code>&lt;////g&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>"//g"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, path, nil host: <code>&lt;.///g&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>".///g"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, non-empty host: <code>&lt;//g&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>"g"</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Path which looks like a query: <code>&lt;./p=q:r&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>"./p=q:r"</code></td><td><code>#f</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components filled out: <code>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except user filled out: <code>&lt;//example.org:80/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except host filled out: <code>&lt;//user@:80/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>"user"</code></td><td><code>#f</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except port filled out: <code>&lt;//user@example.org/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except path filled out: <code>&lt;//user@example.org:80?qua#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>#f</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except query filled out: <code>&lt;//user@example.org:80/some/where/place#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>#f</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except fragment filled out: <code>&lt;//user@example.org:80/some/where/place?qua&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>"user"</code></td><td><code>"example.org"</code></td><td><code>80</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>#f</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference empty host, nil user/port: <code>&lt;///some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference empty user, nil host/port: <code>&lt;//@/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>""</code></td><td><code>#f</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference empty port implies empty host: <code>&lt;//:/some/where/place?qua#ought&gt;</code></td></tr>
+  <tr><td>N/A</td><td><code>#f</code></td><td><code>""</code></td><td><code>#f</code></td><td><code>"/some/where/place"</code></td><td><code>"qua"</code></td><td><code>"ought"</code></td></tr>
 </table>
 </div>
 
 <h2 id="implementation">Implementation</h2>
 
-<a href="https://codeberg.org/dguthrie/scheme-iri">The sample implementation</a> is written in portable R<sup>6</sup>RS, but uses <a href="https://synthcode.com/scheme/chibi/lib/chibi/parse.html"><tt>chibi parse</tt></a> for parsing and imports SRFIs from the <a href="https://github.com/arcfide/chez-srfi">Chez-SRFI</a> grab-bag.</p>
+<p><a href="https://codeberg.org/dguthrie/scheme-iri">The sample implementation</a> is written in portable R<sup>6</sup>RS, but uses <a href="https://synthcode.com/scheme/chibi/lib/chibi/parse.html"><code>chibi parse</code></a> for parsing and imports SRFIs from the <a href="https://github.com/arcfide/chez-srfi">Chez-SRFI</a> grab-bag.</p>
 
 <h2 id="bibliography">References</h2>
 
 <ul id="references">
-<li>[1] <span id="rfc3986">RFC 3986: Universal Resource Identifiers (URIs). <a href="https://www.rfc-editor.org/info/rfc3986/">https://www.rfc-editor.org/info/rfc3986/</a></li>
-<li>[2] <span id="rfc3987">RFC 3987: Internationalized Resource Identifiers (IRIs). <a href="https://www.rfc-editor.org/info/rfc3987/">https://www.rfc-editor.org/info/rfc3987/</a></li>
-<li>[3] <span id="hs-network-uri">Graham Klyne, 2004. <a href="https://github.com/haskell/network-uri">The <tt>network-uri</tt> package.</a></li>
-<li>[4] <span id="erl-uri-string">Erlang/OTP (n/d). <a href="https://www.erlang.org/docs/25/man/uri_string.html">URI processing functions.</a></li>
-<li>[5] <span id="webkit">WebKit layout tests (n/d).<a href="https://github.com/WebKit/WebKit/blob/main/LayoutTests/fast/url/path-expected.txt">path-expected.txt</a></li>
-<li>[6] <span id="guile-rdf">Julien Lepiller, 2020. <a href="https://framagit.org/tyreunom/guile-rdf/">Guile-RDF</a></li>
-<li>[7] <span id="srfi-1">Olin Shivers, 1999. <a href="https://srfi.schemers.org/srfi-1/">SRFI 1: List library</a></li>
-<li>[8] <span id="srfi-160">John Cowan, Shiro Kawai, 2019. <a href="https://srfi.schemers.org/srfi-160/">SRFI 160: Homogenous numeric vector libraries</a></li>
-<li>[9] <span id="srfi-262">Daphne Preston-Kendal, 2025 (draft). <a href="https://srfi.schemers.org/srfi-262/">SRFI 262: Extensible pattern-matcher</a></li></ul>
+<li>[1] <span id="rfc3986">RFC 3986: Universal Resource Identifiers (URIs). <a href="https://www.rfc-editor.org/info/rfc3986/">https://www.rfc-editor.org/info/rfc3986/</a></span></li>
+<li>[2] <span id="rfc3987">RFC 3987: Internationalized Resource Identifiers (IRIs). <a href="https://www.rfc-editor.org/info/rfc3987/">https://www.rfc-editor.org/info/rfc3987/</a></span></li>
+<li>[3] <span id="hs-network-uri">Graham Klyne, 2004. <a href="https://github.com/haskell/network-uri">The <code>network-uri</code> package.</a></span></li>
+<li>[4] <span id="erl-uri-string">Erlang/OTP (n/d). <a href="https://www.erlang.org/docs/25/man/uri_string.html">URI processing functions.</a></span></li>
+<li>[5] <span id="webkit">WebKit layout tests (n/d). <a href="https://github.com/WebKit/WebKit/blob/main/LayoutTests/fast/url/path-expected.txt">path-expected.txt</a></span></li>
+<li>[6] <span id="guile-rdf">Julien Lepiller, 2020. <a href="https://framagit.org/tyreunom/guile-rdf/">Guile-RDF</a></span></li>
+<li>[7] <span id="srfi-1">Olin Shivers, 1999. <a href="https://srfi.schemers.org/srfi-1/">SRFI 1: List library</a></span></li>
+<li>[8] <span id="srfi-160">John Cowan, Shiro Kawai, 2019. <a href="https://srfi.schemers.org/srfi-160/">SRFI 160: Homogenous numeric vector libraries</a></span></li>
+<li>[9] <span id="srfi-262">Daphne Preston-Kendal, 2025 (draft). <a href="https://srfi.schemers.org/srfi-262/">SRFI 262: Extensible pattern-matcher</a></span></li></ul>
 
 <h2 id="acknowledgements">Acknowledgements</h2>
 
