@@ -1,20 +1,21 @@
 <!DOCTYPE html>
-<html lang="en"><!--
-SPDX-FileCopyrightText: [year] [copyright holder]
+<html lang="en">
+<!--
+SPDX-FileCopyrightText: 2026 Duncan Guthrie
 SPDX-License-Identifier: MIT
---><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+-->
+  <head>
     <meta charset="utf-8">
-    <title>SRFI ###: URIs and IRIs</title>
-    <link href="https://srfi.schemers.org/favicon.png" rel="icon" sizes="192x192" type="image/png">
-    <link rel="stylesheet" href="SRFI%20%23%23%23_%20___title____files/srfi.css" type="text/css">
+    <title>SRFI 275: URIs and IRIs</title>
+    <link href="/favicon.png" rel="icon" sizes="192x192" type="image/png">
+    <link rel="stylesheet" href="https://srfi.schemers.org/srfi.css" type="text/css">
     <meta name="viewport" content="width=device-width, initial-scale=1"></head>
   <body>
-    <h1><a href="https://srfi.schemers.org/"><img class="srfi-logo" src="SRFI%20%23%23%23_%20___title____files/srfi-logo.svg" alt="SRFI surfboard logo"></a>###: URIs and IRIs</h1>
+    <h1><a href="https://srfi.schemers.org/"><img class="srfi-logo" src="https://srfi.schemers.org/srfi-logo.svg" alt="SRFI surfboard logo"></a>275: URIs and IRIs</h1>
 
 <p>by Duncan Guthrie</p>
 
-<h2 id="status">Status</h2>
+<h2 id="status">Status</h2><h1>
 
 <p style="color: red;">For editor's use only.  Please do not edit this section.</p>
 
@@ -28,8 +29,7 @@ The editor will add this section.</p>
 
 <h2 id="issues">Issues</h2>
 
-<p>??? Optional section that may point out things to be resolved.  This
-will not appear in the final SRFI.</p>
+<p>none so far</p>
 
 <h2 id="rationale">Rationale</h2>
 
@@ -147,7 +147,7 @@ will not appear in the final SRFI.</p>
 <p>Finally, throughout this document, we denote IRIs and URIs using angle brackets, e.g. <tt>&lt;http://example.org&gt;</tt>.</p>
 
 <h3>IRI programming interface</h3>
-<h4>Library: <tt>(srfi XXX iri)</tt></h4>
+<h4>Library: <tt>(srfi 275 iri)</tt></h4>
 
 <b>Syntax:</b> <tt>iri</tt><br>
 <b>Procedure:</b> <tt>(non-relative-iri? ident)</tt><font color=grey>: any &rarr; boolean</font><br>
@@ -221,7 +221,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 <b>Procedure:</b> <tt>(iri-equal? A B)</tt><font color=grey>: iri &rarr; iri &rarr; boolean</font><br>
 <p>Holds true if the two arguments are IRIs and their fields are equal, or if the two arguments are relative references and their fields are equal. An IRI is never equal to a relative reference, and vice versa. It is an error to call this procedure when either argument is not an IRI or relative reference.</p>
 
-<h4>Library: <tt>(srfi XXX iri in-place)</tt></h4>
+<h4>Library: <tt>(srfi 275 iri in-place)</tt></h4>
 
 <b>Procedure:</b> <tt>(set-iri-scheme! ident str)</tt><font color=grey>: non-relative-iri &rarr; string? &rarr; ()</font></br>
 <b>Procedure:</b> <tt>(set-iri-user! ident str)</tt><font color=grey>: iri &rarr; string? &rarr; ()</font><br>
@@ -238,13 +238,13 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 <p>Set the user, host and port authority components in-place.</p>
 
 <h3>URI programming interface</h3>
-<b>Library:</b> <tt>(srfi XXX uri)</tt><br>
-<b>Library:</b> <tt>(srfi XXX uri in-place)</tt><br>
+<b>Library:</b> <tt>(srfi 275 uri)</tt><br>
+<b>Library:</b> <tt>(srfi 275 uri in-place)</tt><br>
 
 <p>Identical programming interfaces to that of IRIs are given for URIs, with procedures and error messages renaming referencing <tt>uri</tt> instead of <tt>iri</tt>. The structure of a URI or URI relative reference is identical. The programming interface differs in the character set permissible within an URI, i.e. <tt>string->uri</tt> signals an appropriate error, as do the setters like <tt>set-uri-host!</tt>.</p>
 
 <h3>Relative reference resolution</h3>
-<h4>Library: <tt>(srfi XXX normalise)</tt></h4>
+<h4>Library: <tt>(srfi 275 normalise)</tt></h4>
 
 <b>Procedure:</b> <tt>(resolve-iri-reference base ref)</tt><font color=grey>: non-relative-iri &rarr; iri &rarr; non-relative-iri</font><br>
 
@@ -283,7 +283,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 <p>Relative reference resolution against a base URI. Behaviour is structurally-identical to that of relative reference resolution for IRIs, as is the error behaviour with respect to base URI.</p>
 
 <h3>Normalisation</h3>
-<h4>Library: <tt>(srfi XXX normalise)</tt></h4>
+<h4>Library: <tt>(srfi 275 normalise)</tt></h4>
 
 <b>Procedure:</b> <tt>(normalise-iri-case ident)</tt><font color=grey>: iri &rarr; iri</font><br>
 <b>Procedure:</b> <tt>(normalise-uri-case ident)</tt><font color=grey>: uri &rarr; uri</font><br>
@@ -309,7 +309,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 <p>These procedures are essentially a sequence of the three normalisation procedures described previously, albeit the specific order is by escapes, by case and by path segments. These procedures are pure-functional and structure-preserving.</p>
 
 <!--                 -->
-<h4>Library: <tt>(srfi XXX normalise in-place)</tt></h4>
+<h4>Library: <tt>(srfi 275 normalise in-place)</tt></h4>
 
 <b>Procedure:</b> <tt>(normalise-iri-case! ident)</tt><font color=grey>: iri &rarr; ()</font><br>
 <b>Procedure:</b> <tt>(normalise-uri-case! ident)</tt><font color=grey>: uri &rarr; ()</font><br>
@@ -333,7 +333,7 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 
 <h3>Equivalence and conversion</h3>
 
-<h4>Library: <tt>(srfi XXX iri)</tt></h4>
+<h4>Library: <tt>(srfi 275 iri)</tt></h4>
 
 <b>Procedure:</b> <tt>(string->iri str)</tt><font color=grey>: string &rarr; iri</font><br>
 <b>Procedure:</b> <tt>(iri->string ident)</tt><font color=grey>: iri &rarr; string</font><br>
@@ -349,13 +349,13 @@ example-IRI → &lt;urn:/ex#IRI&gt;
   </pre>
 </p>
 
-<h4>Library: <tt>(srfi XXX uri)</tt></h4>
+<h4>Library: <tt>(srfi 275 uri)</tt></h4>
 
 <b>Procedure:</b> <tt>(string->uri str)</tt><font color=grey>: string &rarr; uri</font><br>
 <b>Procedure:</b> <tt>(uri->string ident)</tt><font color=grey>: uri &rarr; string</font><br>
 <p>Conversion from string to URI or relative reference, and vice versa. <tt>string->uri</tt> is the fundamental constructor of URIs and relative references. See the above examples for IRIs.</p>
 
-<h4>Library: <tt>(srfi XXX normalise)</tt></h4>
+<h4>Library: <tt>(srfi 275 normalise)</tt></h4>
 
 <b>Procedure:</b> <tt>(iri-eqv? A B)</tt><font color=grey>: iri &rarr; iri &rarr; boolean</font><br>
 
