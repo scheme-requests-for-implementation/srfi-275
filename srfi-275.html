@@ -16,6 +16,9 @@ SPDX-License-Identifier: MIT
       dl.test-cases dd { margin-left: 1.5em; margin-bottom: 0; }
       dl.test-cases dd .remark { display: block; font-style: italic; margin-top: 0.2em; }
       dl.test-cases dd .components { display: block; margin-top: 0.2em; }
+      table.parsing-segments { margin-left: 2em; border-collapse: collapse; }
+      table.parsing-segments th, table.parsing-segments td { padding: 0.2em 0.4em; text-align: left; }
+      table.parsing-segments tr.case-label td { padding-top: 0.5em; font-weight: bold; }
     </style>
   </head>
   <body>
@@ -646,143 +649,99 @@ example-IRI → &lt;urn:/ex#IRI&gt;
 </dl>
 
 <h4>Parsing expected segments</h4>
-<dl class="test-cases">
-  <dt>Empty URI</dt>
-  <dd><tt>&lt;&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Empty authority</dt>
-  <dd><tt>&lt;//&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Empty user</dt>
-  <dd><tt>&lt;//@&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>""</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Empty port</dt>
-  <dd><tt>&lt;//:&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Empty query</dt>
-  <dd><tt>&lt;?&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>""</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Empty fragment</dt>
-  <dd><tt>&lt;#&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>""</tt></span></dd>
-  <dt>Path which looks like a hostname</dt>
-  <dd><tt>&lt;example.org&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"example.org"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>URN-like</dt>
-  <dd><tt>&lt;urn:something&gt;</tt>
-    <span class="components">scheme: <tt>"urn"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"something"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>URN-like, path looks like hostname</dt>
-  <dd><tt>&lt;urn:example.org&gt;</tt>
-    <span class="components">scheme: <tt>"urn"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"example.org"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Path which looks like a URN</dt>
-  <dd><tt>&lt;./urn:something&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"./urn:something"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>User with colon segment</dt>
-  <dd><tt>&lt;http://a:b@c:29&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"a:b"</tt>, host: <tt>"c"</tt>, port: <tt>29</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>User-like component appears as path</dt>
-  <dd><tt>&lt;http::@c:29&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>":@c:29"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Host-like component appears as user</dt>
-  <dd><tt>&lt;http://example.org:b@d/&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"example.org:b"</tt>, host: <tt>"d"</tt>, port: <tt>#f</tt>, path: <tt>"/"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Padded port as numeric value</dt>
-  <dd><tt>&lt;http://example.org:000080&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Query component with question mark</dt>
-  <dd><tt>&lt;http://example.org/abcd?efgh?ijkl&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>#f</tt>, path: <tt>"/abcd"</tt>, query: <tt>"efgh?ijkl"</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Fragment component with question mark</dt>
-  <dd><tt>&lt;http://example.org/abcd#efgh?ijkl&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>#f</tt>, path: <tt>"/abcd"</tt>, query: <tt>#f</tt>, fragment: <tt>"efgh?ijkl"</tt></span></dd>
-  <dt>Path where first segment looks like host</dt>
-  <dd><tt>&lt;http:///some/where/place&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Scheme with nil host</dt>
-  <dd><tt>&lt;foo:&gt;</tt>
-    <span class="components">scheme: <tt>"foo"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Scheme with path, empty host</dt>
-  <dd><tt>&lt;foo:////g&gt;</tt>
-    <span class="components">scheme: <tt>"foo"</tt>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"//g"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Scheme with path, nil host</dt>
-  <dd><tt>&lt;foo:.///g&gt;</tt>
-    <span class="components">scheme: <tt>"foo"</tt>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>".///g"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Scheme with non-empty host</dt>
-  <dd><tt>&lt;foo://g&gt;</tt>
-    <span class="components">scheme: <tt>"foo"</tt>, user: <tt>#f</tt>, host: <tt>"g"</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>All components filled out</dt>
-  <dd><tt>&lt;http://user@example.org:80/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>All components except user filled out</dt>
-  <dd><tt>&lt;http://example.org:80/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>All components except host filled out</dt>
-  <dd><tt>&lt;http://user@:80/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>#f</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>All components except port filled out</dt>
-  <dd><tt>&lt;http://user@example.org/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>All components except path filled out</dt>
-  <dd><tt>&lt;http://user@example.org:80?qua#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>#f</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>All components except query filled out</dt>
-  <dd><tt>&lt;http://user@example.org:80/some/where/place#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>#f</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>All components except fragment filled out</dt>
-  <dd><tt>&lt;http://user@example.org:80/some/where/place?qua&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Empty host, nil user/port</dt>
-  <dd><tt>&lt;http:///some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Empty user, nil host/port</dt>
-  <dd><tt>&lt;http://@/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>""</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Empty port implies empty host</dt>
-  <dd><tt>&lt;http://:/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <tt>"http"</tt>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference, nil host</dt>
-  <dd><tt>&lt;////g&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"//g"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Relative reference, path, nil host</dt>
-  <dd><tt>&lt;.///g&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>".///g"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Relative reference, non-empty host</dt>
-  <dd><tt>&lt;//g&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>"g"</tt>, port: <tt>#f</tt>, path: <tt>#f</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Path which looks like a query</dt>
-  <dd><tt>&lt;./p=q:r&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"./p=q:r"</tt>, query: <tt>#f</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Relative reference, all components filled out</dt>
-  <dd><tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference, all components except user filled out</dt>
-  <dd><tt>&lt;//example.org:80/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference, all components except host filled out</dt>
-  <dd><tt>&lt;//user@:80/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>#f</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference, all components except port filled out</dt>
-  <dd><tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference, all components except path filled out</dt>
-  <dd><tt>&lt;//user@example.org:80?qua#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>#f</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference, all components except query filled out</dt>
-  <dd><tt>&lt;//user@example.org:80/some/where/place#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>#f</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference, all components except fragment filled out</dt>
-  <dd><tt>&lt;//user@example.org:80/some/where/place?qua&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>"user"</tt>, host: <tt>"example.org"</tt>, port: <tt>80</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>#f</tt></span></dd>
-  <dt>Relative reference empty host, nil user/port</dt>
-  <dd><tt>&lt;///some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference empty user, nil host/port</dt>
-  <dd><tt>&lt;//@/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>""</tt>, host: <tt>#f</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-  <dt>Relative reference empty port implies empty host</dt>
-  <dd><tt>&lt;//:/some/where/place?qua#ought&gt;</tt>
-    <span class="components">scheme: <b>N/A</b>, user: <tt>#f</tt>, host: <tt>""</tt>, port: <tt>#f</tt>, path: <tt>"/some/where/place"</tt>, query: <tt>"qua"</tt>, fragment: <tt>"ought"</tt></span></dd>
-</dl>
+<table class="parsing-segments">
+  <tr><th>scheme</th><th>user</th><th>host</th><th>port</th><th>path</th><th>query</th><th>fragment</th></tr>
+  <tr class="case-label"><td colspan="7">Empty URI: <tt>&lt;&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty authority: <tt>&lt;//&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty user: <tt>&lt;//@&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty port: <tt>&lt;//:&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty query: <tt>&lt;?&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty fragment: <tt>&lt;#&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Path which looks like a hostname: <tt>&lt;example.org&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">URN-like: <tt>&lt;urn:something&gt;</tt></td></tr>
+  <tr><td><tt>"urn"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"something"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">URN-like, path looks like hostname: <tt>&lt;urn:example.org&gt;</tt></td></tr>
+  <tr><td><tt>"urn"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Path which looks like a URN: <tt>&lt;./urn:something&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"./urn:something"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">User with colon segment: <tt>&lt;http://a:b@c:29&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>"a:b"</tt></td><td><tt>"c"</tt></td><td><tt>29</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">User-like component appears as path: <tt>&lt;http::@c:29&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>":@c:29"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Host-like component appears as user: <tt>&lt;http://example.org:b@d/&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>"example.org:b"</tt></td><td><tt>"d"</tt></td><td><tt>#f</tt></td><td><tt>"/"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Padded port as numeric value: <tt>&lt;http://example.org:000080&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Query component with question mark: <tt>&lt;http://example.org/abcd?efgh?ijkl&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>"/abcd"</tt></td><td><tt>"efgh?ijkl"</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Fragment component with question mark: <tt>&lt;http://example.org/abcd#efgh?ijkl&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>"/abcd"</tt></td><td><tt>#f</tt></td><td><tt>"efgh?ijkl"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Path where first segment looks like host: <tt>&lt;http:///some/where/place&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Scheme with nil host: <tt>&lt;foo:&gt;</tt></td></tr>
+  <tr><td><tt>"foo"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Scheme with path, empty host: <tt>&lt;foo:////g&gt;</tt></td></tr>
+  <tr><td><tt>"foo"</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"//g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Scheme with path, nil host: <tt>&lt;foo:.///g&gt;</tt></td></tr>
+  <tr><td><tt>"foo"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>".///g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Scheme with non-empty host: <tt>&lt;foo://g&gt;</tt></td></tr>
+  <tr><td><tt>"foo"</tt></td><td><tt>#f</tt></td><td><tt>"g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">All components filled out: <tt>&lt;http://user@example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">All components except user filled out: <tt>&lt;http://example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">All components except host filled out: <tt>&lt;http://user@:80/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>#f</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">All components except port filled out: <tt>&lt;http://user@example.org/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">All components except path filled out: <tt>&lt;http://user@example.org:80?qua#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>#f</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">All components except query filled out: <tt>&lt;http://user@example.org:80/some/where/place#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>#f</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">All components except fragment filled out: <tt>&lt;http://user@example.org:80/some/where/place?qua&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty host, nil user/port: <tt>&lt;http:///some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty user, nil host/port: <tt>&lt;http://@/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Empty port implies empty host: <tt>&lt;http://:/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td><tt>"http"</tt></td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, nil host: <tt>&lt;////g&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"//g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, path, nil host: <tt>&lt;.///g&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>".///g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, non-empty host: <tt>&lt;//g&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>"g"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Path which looks like a query: <tt>&lt;./p=q:r&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"./p=q:r"</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components filled out: <tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except user filled out: <tt>&lt;//example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except host filled out: <tt>&lt;//user@:80/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>#f</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except port filled out: <tt>&lt;//user@example.org:80/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except path filled out: <tt>&lt;//user@example.org:80?qua#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>#f</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except query filled out: <tt>&lt;//user@example.org:80/some/where/place#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>#f</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference, all components except fragment filled out: <tt>&lt;//user@example.org:80/some/where/place?qua&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>"user"</tt></td><td><tt>"example.org"</tt></td><td><tt>80</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>#f</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference empty host, nil user/port: <tt>&lt;///some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference empty user, nil host/port: <tt>&lt;//@/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+  <tr class="case-label"><td colspan="7">Relative reference empty port implies empty host: <tt>&lt;//:/some/where/place?qua#ought&gt;</tt></td></tr>
+  <tr><td>N/A</td><td><tt>#f</tt></td><td><tt>""</tt></td><td><tt>#f</tt></td><td><tt>"/some/where/place"</tt></td><td><tt>"qua"</tt></td><td><tt>"ought"</tt></td></tr>
+</table>
 
 <h2 id="implementation">Implementation</h2>
 
