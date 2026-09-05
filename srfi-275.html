@@ -234,7 +234,7 @@ SPDX-License-Identifier: MIT
   <li>If the path components differ, then the two paths (as far as possible <a href="#path-normalization">normalizing dotted segments</a>) are compared in order to find a path relative to the base argument&rsquo;s path.</li>
   <li>A relative reference is returned, using this relative path, all three authority components unset (set to <code>#f</code>), and with query and fragment of the non-base argument.</li>
   <li>If the query components differ, then a relative reference is returned with all three authority components unset, the empty path, and with the query and fragment of the non-base argument.</li>
-  <li>Exhausting the above cases implies that the path components are equal (and that <a href="#path-rfc-abempty?"><code>path-rfc-abempty?</code></a> holds. A relative reference is returned in which the authority components are unset, query is unset, and with the following path:
+  <li>Exhausting the above cases implies that the path components are equal, and that <a href="#rfc-path-abempty?"><code>rfc-path-abempty?</code></a> holds against the path. A relative reference is returned in which the authority components are unset, query is unset, and with the following path:
     <ol>
       <li>If there are no segments (single slash), use the common path as-is.</li>
       <li>If its final segment is empty, then use an absolute path with one segement, a single dot (&lsquo;<code>.</code>&rsquo;).</li>
