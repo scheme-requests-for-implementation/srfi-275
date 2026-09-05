@@ -135,7 +135,7 @@ SPDX-License-Identifier: MIT
 
 <p>Our design is to provide getters and setters which abstract away the internal representation, working on string representations of URI components. More generally, we suspect that existing implementations largely omit setters because preserving internal consistency is fairly cumbersome on the implementor and programmer, with validity of authority components being defined with respect to the path, and vice versa. The specific challenge is to ensure that setting a given component would not violate the URI grammar, as this may elicit a flat string representation which would have a different structure when parsed again.</p>
 
-<p>In order to set one of the three authority components safely on an URI or IRI, then the following conditions <i>must</i> hold with respect to the URI or IRI&rsquo;s existing path shape:<p>
+<p>In order to set one of the three authority components safely on an URI or IRI, then the following conditions <i>must</i> hold with respect to the URI or IRI&rsquo;s existing path shape:</p>
 <ol>
   <li>If the authority component becomes set (at least one of the three components are <b>not</b> <code>#f</code>), <a href="#rfc-path-abempty?"><code>rfc-path-abempty?</code></a> must hold against the path.</li>
   <li>If the authority component becomes unset (all of the three components are <code>#f</code>), and the URI or IRI is non-relative, then either <a href="#rfc-path-absolute?"><code>rfc-path-absolute?</code></a>, <a href="#rfc-path-rootless?"><code>rfc-path-rootless?</code></a> or <a href="#rfc-path-empty?"><code>rfc-path-empty?</code></a> must hold against the path.</li>
@@ -1669,7 +1669,7 @@ example-IRI → &lt;http://example.org:80/ex#IRI&gt;
   <dd><code>&lt;g#s/./x&gt;</code> &rarr; <code>&lt;http://a/b/c/g#s/./x&gt;</code></dd>
   <dd><code>&lt;g#s/../x&gt;</code> &rarr; <code>&lt;http://a/b/c/g#s/../x&gt;</code></dd>
 </dl>
-<p>Reference resolution <i>must</i> ensure that a path is never elicited which would be mistaken for the double slash after a scheme&rsquo;s colon. (The selected strategy is to prefix a <code>./</code> to the path, making it relative, but in principle prepending a slash to the segments i.e. after the initial slash, <code>/.///</code>, is equivalent.)<p>
+<p>Reference resolution <i>must</i> ensure that a path is never elicited which would be mistaken for the double slash after a scheme&rsquo;s colon. (The selected strategy is to prefix a <code>./</code> to the path, making it relative, but in principle prepending a slash to the segments i.e. after the initial slash, <code>/.///</code>, is equivalent.)</p>
 <dl class="test-cases">
   <dt>Base IRI: <code>&lt;f:/a&gt;</code></dt>
   <dd><code>&lt;.//g&gt;</code> &rarr; <code>&lt;f:.///g&gt;</code></dd>
@@ -1729,7 +1729,6 @@ example-IRI → &lt;http://example.org:80/ex#IRI&gt;
 </dl>
 
 <dl class="test-cases" id="uriswap-cases-klyne">
-  <dt>
   <dt>Base IRI: <code>&lt;http://example/x/y%2Fz&gt;</code> (see <a href="https://lists.w3.org/Archives/Public/uri/2003Feb/0016.html">here</a>)</dt>
   <dd><code>&lt;abc&gt;</code> &rarr; <code>&lt;http://example/x/abc&gt;</code></dd>
   <dd><code>&lt;../x%2Fabc&gt;</code> &rarr; <code>&lt;http://example/x%2Fabc&gt;</code></dd>
