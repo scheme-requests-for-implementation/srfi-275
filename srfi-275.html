@@ -279,7 +279,7 @@ SPDX-License-Identifier: MIT
 <p>Basic operations specified include path creation from sets of segments, subscripting, persistent updates, and count of segments. We go a little further and provide utility procedures for path shape (the variants in the RFC 3986 and 3987 ABNF), and for copying paths. Finally, this design allows us to explicitly expose in the programming interface generalist procedures inherited from RFC 3986 (e.g. <a href="#remove-dot-segments"><code>remove-dot-segments</code></a>).</p>
 
 <h2 id="rnrs-conditions">R<sup>6</sup>RS conditions</h2>
-<p>In this SRFI, &ldquo;an error is raised&rdquo; means that an error is signalled, and that the condition has type <code>&error</code> (if R<sup>6</sup>RS conditions are available). Similarly, &ldquo;an assertion violation is raised&rdquo; means that an error is signalled and that the condition has type <code>&assertion-violation</code> (if R<sup>6</sup>RS conditions are available). Furthermore, this should be a compound condition as follows:</p>
+<p>In this SRFI, &ldquo;an error is raised&rdquo; means that an error is signalled, and that the condition has type <code>&amp;error</code> (if R<sup>6</sup>RS conditions are available). Similarly, &ldquo;an assertion violation is raised&rdquo; means that an error is signalled and that the condition has type <code>&amp;assertion-violation</code> (if R<sup>6</sup>RS conditions are available). Furthermore, this should be a compound condition as follows:</p>
 <ul>
   <li>Raise a <code>&amp;who</code> condition with the procedure name defined in this document</li>
   <li>Raise an <code>&amp;irritants</code> condition with the irritants in the order described</li>
