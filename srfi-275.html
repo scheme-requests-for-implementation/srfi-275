@@ -192,34 +192,34 @@ SPDX-License-Identifier: MIT
 
 (define (remove-dot-segments path)
   (match (remove-dot-segments* (path-raw-segments path))
-    ['()
+    ('()
      (if (relative-path? path)
          (make-raw-relative-path '())
-         (make-raw-absolute-path '()))]
-    [(cons head rest)
-     (cond [(absolute-path? path)
-            (make-raw-absolute-path undotted)]
-           [(and (relative-path? path)
+         (make-raw-absolute-path '())))
+    ((cons head rest)
+     (cond ((absolute-path? path)
+            (make-raw-absolute-path undotted))
+           ((and (relative-path? path)
                  (u16vector-empty? head))
-            (make-raw-absolute-path rest)]
-           [else
-            (make-raw-relative-path undotted)])]))
+            (make-raw-absolute-path rest))
+           (else
+            (make-raw-relative-path undotted))))))
 
 (define (remove-dot-segments* segments)
-  (let loop ([segments segments]
-             [trailing-slash? #f]
-             [acc '()])
+  (let loop ((segments segments)
+             (trailing-slash? #f)
+             (acc '()))
     (match segments
-      ['()
+      ('()
        (if trailing-slash?
            (reverse `(#u16() . ,acc))
-           (reverse acc))]
-      [(cons (? current-wd?) rest)
-       (loop rest #t acc)]
-      [(cons (? parent-wd?) rest)
-       (loop rest #t (if (pair? acc) (cdr acc) acc))]
-      [(cons x rest)
-       (loop rest #f (cons x acc))])))
+           (reverse acc)))
+      ((cons (? current-wd?) rest)
+       (loop rest #t acc))
+      ((cons (? parent-wd?) rest)
+       (loop rest #t (if (pair? acc) (cdr acc) acc)))
+      ((cons x rest)
+       (loop rest #f (cons x acc))))))
 </pre>
 <p>Additionally, we think that this view of Remove Dot Segments is clearer than the stack-based description in RFC 3986, with fewer pattern-matching clauses required.</p>
 
@@ -280,13 +280,13 @@ SPDX-License-Identifier: MIT
 <p>Basic operations specified include path creation from sets of segments, subscripting, persistent updates, and count of segments. We go a little further and provide utility procedures for path shape (the variants in the RFC 3986 and 3987 ABNF), and for copying paths. Finally, this design allows us to explicitly expose in the programming interface generalist procedures inherited from RFC 3986 (e.g. <a href="#remove-dot-segments"><code>remove-dot-segments</code></a>).</p>
 
 <h2 id="rnrs-conditions">R<sup>6</sup>RS conditions</h2>
-<p>In this SRFI, &ldquo;an error is raised&rdquo; means that an error is signalled, and that the condition has type <code>&amp;error</code> (if R<sup>6</sup>RS conditions are available). Similarly, &ldquo;an assertion violation is raised&rdquo; means that an error is signalled and that the condition has type <code>&amp;assertion-violation</code> (if R<sup>6</sup>RS conditions are available). Furthermore, this should be a compound condition as follows:</p>
+<p>In this SRFI, &ldquo;an error is raised&rdquo; means that an error is signalled, and that the condition has type <code>&amp;error</code> (if R<sup>6</sup>RS conditions are available). Similarly, &ldquo;an assertion violation is raised&rdquo; means that an error is signalled and that the condition has type <code>&amp;assertion</code> (if R<sup>6</sup>RS conditions are available). Furthermore, this should be a compound condition as follows:</p>
 <ul>
   <li>Raise a <code>&amp;who</code> condition with the procedure name defined in this document</li>
   <li>Raise an <code>&amp;irritants</code> condition with the irritants in the order described</li>
 </ul>
 <p>R<sup>6</sup>RS conditions may not be available, in which implementations may simply signal an error (in the sense of the R<sup>7</sup>RS) with the described irritants.</p>
-<p>With access to R<sup>6</sup>RS conditions, one might implement the <a href="#encode-string"><code>encode-string</code></a> procedure as follows. The first call to the R<sup>6</sup>RS <code>assertion-violation</code> procedure raises a compound condition of <code>&amp;who</code>,  <code>&amp;irritants</code>, <code>&amp;assertion-violation</code> and <code>&amp;error</code> (as well as <code>&amp;message</code>), where the <code>who</code> portion is the symbol <code>encode-string</code>, and the single irritant is the string argument.</p>
+<p>With access to R<sup>6</sup>RS conditions, one might implement the <a href="#encode-string"><code>encode-string</code></a> procedure as follows. The first call to the R<sup>6</sup>RS <code>assertion-violation</code> procedure raises a compound condition of <code>&amp;who</code>,  <code>&amp;irritants</code>, <code>&amp;assertion</code> and <code>&amp;error</code> (as well as <code>&amp;message</code>), where the <code>who</code> portion is the symbol <code>encode-string</code>, and the single irritant is the string argument.</p>
 <pre>
 (define encode-string
   (case-lambda
@@ -624,9 +624,9 @@ example-IRI &rarr; &lt;/ex#IRI&gt;
   <code class="signature">(<a href="#iri-path" id="iri-path">iri-path</a> <var>iri</var>)</code><br>
 </div>
 
-<p>Retrieve the RFC 3987 path component of <var>iri</var> as a path object as described in the <a href="#basic-paths-2">path sub library</a>. Unlike the other component, <code>#f</code> is never returned.</p>
+<p>Retrieve the RFC 3987 path component of <var>iri</var> as a path object as described in the <a href="#basic-paths-2">path sub library</a>. Unlike the other components, <code>#f</code> is never returned.</p>
 
-<p>Examples for the above seven component-specific procedures:</p>
+<p>Examples for the above component-specific procedures:</p>
 <pre>
 (define example-IRI (<a href="#string-%3Eiri">string->iri</a> "http://example.org:80/ex#IRI"))
 
@@ -810,11 +810,11 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#uri-path" id="uri-path">uri-path</a> <var>uri</var>)</code><br>
   <code class="signature">(<a href="#uri-authority" id="uri-authority">uri-authority</a> <var>uri</var>)</code><br>
   <code class="signature">(<a href="#uri-username+password" id="uri-username+password">uri-username+password</a> <var>uri</var>)</code><br>
-  <code class="signature">(<a href="#update-uri-scheme" id="update-uri-scheme">update-uri-scheme</a> <var>uri</var> <var>obj</var>)</code><br>
+  <code class="signature">(<a href="#update-uri-scheme" id="update-uri-scheme">update-uri-scheme</a> <var>non-relative-uri</var> <var>string</var>)</code><br>
   <code class="signature">(<a href="#update-uri-user" id="update-uri-user">update-uri-user</a> <var>uri</var> <var>obj</var>)</code><br>
   <code class="signature">(<a href="#update-uri-host" id="update-uri-host">update-uri-host</a> <var>uri</var> <var>obj</var>)</code><br>
   <code class="signature">(<a href="#update-uri-port" id="update-uri-port">update-uri-port</a> <var>uri</var> <var>obj</var>)</code><br>
-  <code class="signature">(<a href="#update-uri-path" id="update-uri-path">update-uri-path</a> <var>uri</var> <var>obj</var>)</code><br>
+  <code class="signature">(<a href="#update-uri-path" id="update-uri-path">update-uri-path</a> <var>uri</var> <var>path</var>)</code><br>
   <code class="signature">(<a href="#update-uri-query" id="update-uri-query">update-uri-query</a> <var>uri</var> <var>obj</var>)</code><br>
   <code class="signature">(<a href="#update-uri-fragment" id="update-uri-fragment">update-uri-fragment</a> <var>uri</var> <var>obj</var>)</code><br>
   <code class="signature">(<a href="#update-uri-authority" id="update-uri-authority">update-uri-authority</a> <var>uri</var> <var>#f</var>)</code><br>
@@ -888,8 +888,6 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
 
 <h3 id="normalization-2">Normalization</h3>
 
-<p>The following procedures are functional and structure preserving on the level of components, to avoid some of the problems with string representations being parsed differently post-normalization.</p>
-
 <div class="feature">
   <span class="category"><code>(srfi :275 normalize)</code><br>procedure</span>
   <code class="signature">(<a href="#normalize-iri-case" id="normalize-iri-case">normalize-iri-case</a> <var>iri</var>)</code><br>
@@ -938,7 +936,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#normalize-iri-path" id="normalize-iri-path">normalize-iri-path</a> <var>iri</var>)</code><br>
   <code class="signature">(<a href="#normalize-uri-path" id="normalize-uri-path">normalize-uri-path</a> <var>uri</var>)</code><br>
 </div>
-<p>These procedures normalize path segments given the control segments &lsquo;<code>.</code>&rsquo; and &lsquo;<code>..</code>&rsquo;. While path segments of IRI or URI relative references are not normalized, these procedures simply have no effect and no error is raised, consistent with the other normalization procedures. Although it is relatively uncommon for relative paths to appear in non-relative IRIs or URIs, they are permissible e.g. within URN components.</p>
+<p>These procedures normalize path segments given the control segments &lsquo;<code>.</code>&rsquo; and &lsquo;<code>..</code>&rsquo;. While path segments of IRI or URI relative references are not normalized, these procedures simply have no effect and no error is raised, consistent with the other normalization procedures. Although it is relatively uncommon for relative paths to appear in non-relative IRIs or URIs, they are permissible e.g. within URNs.</p>
 
 <div class="feature">
   <span class="category"><code>(srfi :275 normalize)</code><br>procedure</span>
@@ -1111,7 +1109,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
 
 <h3 id="basic-paths-2">Basic paths</h3>
 
-<p>This section descibes the basic path sub-library, consisting of two path variants with a common internal segment structure, tagged with whether there is a leading slash. In addition to predicates to distinguish these two path types, we describe predicates which exactly follow the RFC 3986 and 3987 definitions, which are prefixed with <code>rfc3987-</code>, because our paths admit the character set of paths described in RFC 3987.  Additionally, the prefixed procedures do not raise an error on non-path objects, instead returning <code>#f</code>, consistent with the generic <code>absolute-path?</code> or <code>relative-path?</code> procedures.</p>
+<p>This section descibes the basic path sub-library, consisting of two path variants with a common internal segment structure, tagged with whether there is a leading slash. In addition to predicates to distinguish these two path types, we describe predicates which exactly follow the RFC 3986 and 3987 definitions, which are prefixed with <code>rfc3987-</code>, because our paths admit the character repertoire of paths described in RFC 3987.  Additionally, the prefixed procedures do not raise an error on non-path objects, instead returning <code>#f</code>, consistent with the generic <code>absolute-path?</code> or <code>relative-path?</code> procedures.</p>
 
 <div class="feature">
   <span class="category"><code>(srfi :275 path)</code><br>procedure</span>
