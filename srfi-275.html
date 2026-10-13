@@ -108,14 +108,14 @@ SPDX-License-Identifier: MIT
 
 <h2 id="whatwg">RFC 3986 and 3987 over the WHATWG &ldquo;living standard&rdquo;</h2>
 
-<p>RFC 3986 and 3987 (2005) are the most recent standards proposed by the IETF, but the WHATWG also publish the URL Living Standard <a href="#whatwg-url-standard">[3]</a>. The most dramatic change is to eschew the formal grammar defined in RFC 3986 in favour of a long-form text description of a parsing strategy. This arguably makes it difficult for implementors to verify correctness, or to select a processing strategy most appropriate to their implementation (data structures, parsing techniques). It is difficult to understand how RFC 3986 and the WHATWG specification diverge, and the WHATWG approach represents much more of a moving target than the IETF processes of deprecation. Finally, there is no successor proposal for IRIs, which remain current in recent standards such as JSON-LD (2020) <a href="#json-ld11">[5]</a>. These issues are discussed here <a href="#an-appeal-to-the-whatwg">[19]</a>, and the proliferation of different, competing standards are discussed here <a href="#draft-ruby-url-problem-01">[20]</a>.</p>
+<p>RFC 3986 and 3987 (2005) are the most recent standards proposed by the IETF, but the WHATWG also publish the URL Living Standard <a href="#whatwg-url-standard">[3]</a>. The most dramatic change is to eschew the formal grammar defined in RFC 3986 in favour of a long-form text description of a parsing strategy. This arguably makes it difficult for implementors to verify correctness, or to select a processing strategy most appropriate to their implementation (data structures, parsing techniques). It is difficult to understand how RFC 3986 and the WHATWG specification diverge, and the WHATWG approach represents much more of a moving target than the IETF processes of deprecation. Finally, there is no successor proposal for IRIs, which remain current in recent standards such as JSON-LD (2020) <a href="#json-ld11">[5]</a>. These issues are discussed here <a href="#an-appeal-to-the-whatwg">[19]</a>, and the proliferation of different, competing standards is discussed here <a href="#draft-ruby-url-problem-01">[20]</a>.</p>
 <p>We do however incorporate one part of the WHATWG standard: escapes (percent-encodings) are referred to as percent-encoded bytes, as this terminology more clearly distinguishes the escape from the interpretation (e.g. as a UTF-8 octet).</p>
 
 <h2 id="polymorphic-procedures">Relative references and polymorphic procedures</h2>
 
 <p>RFC 3986 and 3987 distinguish URIs and IRIs, respectively, from their <a href="https://www.rfc-editor.org/info/rfc3986/#section-4.2">relative references</a>, which must be resolved against a base URI or IRI in order to be used. The main application of relative references is to allow one to refer to resources and author documents without knowing the final publishing location. For example, a graph database may produce RDF documents, where resources are denoted with IRI relative references, assuming that these documents would be interchanged with another system which mints full IRIs with respect to its hosting location.</p>
 
-<p>Somewhat confusingly, RFC 3986 defines <a href="https://www.rfc-editor.org/info/rfc3986/#section-4.1">&ldquo;URI-reference&rdquo;</a> as the most common usage of URI: either an URI or a relative reference. We follow this common usage by developing polymorphic getters and setters which work on URIs and relative references, with the predicate <a href="#uri?"><code>uri?</code></a> holding true for both URIs and relative references. This procedure would hence correspond to testing for an RFC 3986 <a href="https://www.rfc-editor.org/info/rfc3986/#section-4.1">&ldquo;URI-reference&rdquo;</a>. (RFC 3987 follows an identical convention for IRIs and their relative references, so the same approach is followed for IRIs.)</p>
+<p>Somewhat confusingly, RFC 3986 defines <a href="https://www.rfc-editor.org/info/rfc3986/#section-4.1">&ldquo;URI-reference&rdquo;</a> as the most common usage of URI: either an URI or a relative reference. We follow this common usage by developing polymorphic getters and setters which work on URIs and relative references, with the predicate <a href="#uri?"><code>uri?</code></a> holding true for both URIs and relative references. This procedure would hence correspond to testing for an RFC 3986 <a href="https://www.rfc-editor.org/info/rfc3986/#section-4.1">&ldquo;URI-reference&rdquo;</a>. RFC 3987 follows an identical convention for IRIs and their relative references, so the same approach is followed for IRIs.</p>
 
 <p>The most divergent behaviour between widespread implementations of URIs and IRIs has been with respect to normalization of relative references. We explicitly avoid defining path segment normalization for relative references (regardless of whether the <i>path</i> is absolute or relative) because the behaviour is largely undefined by RFC 3986 and 3987 or any other current specification. See <a href="#normalization">the section on normalization</a> for more details, and <a href="#test-suite">the test suite</a>.</p>
 
@@ -141,13 +141,13 @@ SPDX-License-Identifier: MIT
 
 <p>In order to set one of the three authority components safely on an URI or IRI, then the following conditions <i>must</i> hold with respect to the URI or IRI&rsquo;s existing path shape:</p>
 <ol>
-  <li>If the authority component becomes set (at least one of the three components are <b>not</b> <code>#f</code>), <a href="#rfc3987-path-abempty?"><code>rfc3987-path-abempty?</code></a> must hold against the path.</li>
+  <li>If the authority component becomes set (at least one of the three components is <b>not</b> <code>#f</code>), <a href="#rfc3987-path-abempty?"><code>rfc3987-path-abempty?</code></a> must hold against the path.</li>
   <li>If the authority component becomes unset (all of the three components are <code>#f</code>), and the URI or IRI is non-relative, then either <a href="#rfc3987-path-absolute?"><code>rfc3987-path-absolute?</code></a>, <a href="#rfc3987-path-rootless?"><code>rfc3987-path-rootless?</code></a> or <a href="#empty-path?"><code>empty-path?</code></a> must hold against the path.</li>
   <li>If the authority component becomes unset (all of the three components are <code>#f</code>), and the URI or IRI is a relative reference, then either <a href="#rfc3987-path-absolute?"><code>rfc3987-path-absolute?</code></a>, <a href="#rfc3987-path-noscheme?"><code>rfc3987-path-noscheme?</code></a> or <a href="#empty-path?"><code>empty-path?</code></a> must hold against the existing path component.</li>
 </ol>
-<p>Similarly, in order to set the path component safely, then the following conditions <i>must</i> hold with respect to the three authority components:</p>
+<p>Similarly, in order to set the path component safely, the following conditions <i>must</i> hold with respect to the three authority components:</p>
 <ol>
-  <li>If either of the authority components above are set, then <a href="#rfc3987-path-abempty?"><code>rfc3987-path-abempty?</code></a> must hold against the path to be set.</li>
+  <li>If either of the authority components above is set, then <a href="#rfc3987-path-abempty?"><code>rfc3987-path-abempty?</code></a> must hold against the path to be set.</li>
   <li>If no authority component is set, and the URI or IRI is non-relative, then either <a href="#rfc3987-path-absolute?"><code>rfc3987-path-absolute?</code></a>, <a href="#rfc3987-path-rootless?"><code>rfc3987-path-rootless?</code></a> or <a href="#empty-path?"><code>empty-path?</code></a> must hold against the path to be set.</li>
   <li>If no authority component is set, and the URI or IRI is a relative reference, then either <a href="#rfc3987-path-absolute?"><code>rfc3987-path-absolute?</code></a>, <a href="#rfc3987-path-noscheme?"><code>rfc3987-path-noscheme?</code></a> or <a href="#empty-path?"><code>empty-path?</code></a> must hold against the path to be set.</li>
 </ol>
@@ -155,7 +155,7 @@ SPDX-License-Identifier: MIT
 <p>Helper predicates for checking whether setting these components are located in the <a href="#utilities">utility library</a>: <a href="#user-settable?"><code>user-settable?</code></a>, <a href="#host-settable?"><code>host-settable?</code></a>, <a href="#port-settable?"><code>port-settable?</code></a> and <a href="#path-settable?"><code>path-settable?</code></a>.</p>
 
 <h2 id="utf-8-interpretation">UTF-8 interpretation</h2>
-  <p>R<sup>6</sup>RS&rsquo;s <code>utf8->string</code> procedure silently substitutes the unicode replacement character (<code>U+FFFD</code>) given an invalid UTF-8 sequence. If the information is available then the exception raised when invalid sequences of UTF-8 octets are detected should have the offending octet and its position within the bytevector as irritants. This information may not be available, in which case the irritants consist of the irritants are the offending octet alone. SRFI 281 <a href="#srfi-281">[17]</a> provides unicode conversion procedures which can detect these sequences in external code.</p>
+  <p>R<sup>6</sup>RS&rsquo;s <code>utf8->string</code> procedure silently substitutes the Unicode replacement character (<code>U+FFFD</code>) given an invalid UTF-8 sequence. If the information is available then the exception raised when invalid sequences of UTF-8 octets are detected should have the offending octet and its position within the bytevector as irritants. This information may not be available, in which case the irritants are the offending octet alone. SRFI 281 <a href="#srfi-281">[17]</a> provides Unicode conversion procedures which can detect these sequences in external code.</p>
 
 <h2 id="normalization">Normalization</h2>
 
@@ -239,8 +239,8 @@ SPDX-License-Identifier: MIT
   <li>If the query components differ, then a relative reference is returned with all three authority components unset, the empty path, and with the query and fragment of the non-base argument.</li>
   <li>Exhausting the above cases implies that the path components are equal, and that <a href="#rfc3987-path-abempty?"><code>rfc3987-path-abempty?</code></a> holds against the path. A relative reference is returned in which the authority components are unset, query is unset, and with the following path:
     <ol>
-      <li>If there are no segments (single slash), use the common path as-is.</li>
-      <li>If its final segment is empty, then use an absolute path with one segement, a single dot (&lsquo;<code>.</code>&rsquo;).</li>
+      <li>If there are no segments (single slash), use the common path as is.</li>
+      <li>If its final segment is empty, then use an absolute path with one segment, a single dot (&lsquo;<code>.</code>&rsquo;).</li>
       <li>If its final segment is non-empty, then use an absolute path with that final segment.</li>
     </ol>
   </li>
@@ -260,7 +260,7 @@ SPDX-License-Identifier: MIT
       <li>Otherwise, return a sequence with one segment, the final segment of the non-base path.</li>
     </ol>
   </li>
-  <li>If the candidate sequence of relativized segments was non-empty, and its last segment was dotted (&lsquo;<code>.</code>&rsquo; or &lsquo;<code>..</code>&rsquo;), and if the final segment of the <i>original</i> non-base path was <i>empty</i>, use the candidate sequence as-is.</li>
+  <li>If the candidate sequence of relativized segments was non-empty, and its last segment was dotted (&lsquo;<code>.</code>&rsquo; or &lsquo;<code>..</code>&rsquo;), and if the final segment of the <i>original</i> non-base path was <i>empty</i>, use the candidate sequence as is.</li>
   <li>Otherwise, append the final segment of the <i>original</i> non-base path to the end of the candidate sequence.</li>
 </ol>
 
@@ -286,7 +286,7 @@ SPDX-License-Identifier: MIT
   <li>Raise a <code>&amp;who</code> condition with the procedure name defined in this document</li>
   <li>Raise an <code>&amp;irritants</code> condition with the irritants in the order described</li>
 </ul>
-<p>R<sup>6</sup>RS conditions may not be available, in which implementations may simply signal an error (in the sense of the R<sup>7</sup>RS) with the described irritants.</p>
+<p>R<sup>6</sup>RS conditions may not be available.  Such implementations may simply signal an error (in the sense of the R<sup>7</sup>RS) with the described irritants.</p>
 <p>With access to R<sup>6</sup>RS conditions, one might implement the <a href="#encode-string"><code>encode-string</code></a> procedure as follows. The first call to the R<sup>6</sup>RS <code>assertion-violation</code> procedure raises a compound condition of <code>&amp;who</code>,  <code>&amp;irritants</code>, <code>&amp;assertion</code> and <code>&amp;error</code> (as well as <code>&amp;message</code>), where the <code>who</code> portion is the symbol <code>encode-string</code>, and the single irritant is the string argument.</p>
 <pre>
 (define encode-string
@@ -301,7 +301,7 @@ SPDX-License-Identifier: MIT
            (else
             ...)))))
 </pre>
-<p>An R<sup>7</sup>RS-small implementation might implement it instead as follows:</p>
+<p>An R<sup>7</sup>RS Small implementation might implement it instead as follows:</p>
 <pre>
 (define encode-string
   (case-lambda
@@ -611,7 +611,7 @@ example-IRI &rarr; &lt;/ex#IRI&gt;
   <code class="signature">(<a href="#iri-fragment" id="iri-fragment">iri-fragment</a> <var>iri</var>)</code><br>
 </div>
 
-<p>Retrieve the respective RFC 3987 components of <var>iri</var> as either a string, or <code>#f</code>. An <i>empty</i> component is distinct from an unset one, for example given an IRI with bare <code>?</code>, <code>iri-query</code> would return <code>""</code>, whereas if <code>?</code> had been omitted, <code>iri-query</code> would return <code>#f</code>.</p>
+<p>Retrieve the respective RFC 3987 components of <var>iri</var> as either a string or <code>#f</code>. An <i>empty</i> component is distinct from an unset one.  For example, given an IRI with bare <code>?</code>, <code>iri-query</code> would return <code>""</code>, whereas if <code>?</code> had been omitted, <code>iri-query</code> would return <code>#f</code>.</p>
 
 <div class="feature">
   <span class="category"><code>(srfi :275 iri)</code><br>procedure</span>
@@ -700,7 +700,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#update-iri-port" id="update-iri-port">update-iri-port</a> <var>iri</var> <var>obj</var>)</code><br>
 </div>
 
-<p>Persistent setters to set a respective authority components of <var>iri</var> to <var>obj</var>. These procedures check that the authority component after being set to <var>obj</var> is not in conflict with the shape of the existing path. For instance, relative paths cannot usually be set when either of the authority components are set. The <a href="#error-behaviour-of-setters">conditions associated with setting any authority component</a> with the two input arguments are tested, and if they do not hold, then an error is raised with the input arguments as irritants.</p>
+<p>Persistent setters to set a respective authority components of <var>iri</var> to <var>obj</var>. These procedures check that the authority component, after being set to <var>obj</var>, is not in conflict with the shape of the existing path. For instance, relative paths cannot usually be set when either of the authority components is set. The <a href="#error-behaviour-of-setters">conditions associated with setting any authority component</a> with the two input arguments are tested, and if they do not hold, then an error is raised with the input arguments as irritants.</p>
 <p>In <code>update-iri-user</code> and <code>update-iri-host</code>, if <var>obj</var> is not <code>#f</code> and is a string, then it will be parsed for the respective component. Any character which cannot be contained within the component will be encoded as a sequence of percent-encoded bytes. When a percent-encoded byte is part of an invalid sequence of UTF-8 octets, <a href="#utf-8-interpretation">an error is raised</a>. In <code>update-iri-port</code>, if <var>obj</var> is not <code>#f</code> and is a non-negative integer, then it will be set-as is, otherwise <code>#f</code>. An assertion violation is raised with <var>obj</var> as irritant if it is not of the expected type just discussed or <code>#f</code>.</p>
 
 <p>Examples:</p>
@@ -726,14 +726,14 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <span class="category"><code>(srfi :275 iri)</code><br>procedure</span>
   <code class="signature">(<a href="#update-iri-authority" id="update-iri-authority">update-iri-authority</a> <var>iri</var> <var>u</var> <var>h</var> <var>p</var>)</code><br>
 </div>
-<p>Combination procedure which subsumes the above procedures, setting the user component to <var>u</var>, the host component to <var>h</var> and the port component to <var>p</var>. User <var>u</var> and host <var>h</var> must be <code>#f</code> or string, and port <var>p</var> must be <code>#f</code> or a non-negative integer. Error behaviour is identical to the component-specific setters except that the check for conflict with the existing path is that setting all three would not be in conflict with the path shape.</p>
+<p>Combination procedure which subsumes the above procedures, setting the user component to <var>u</var>, the host component to <var>h</var> and the port component to <var>p</var>. User <var>u</var> and host <var>h</var> must be <code>#f</code> or string, and port <var>p</var> must be <code>#f</code> or a non-negative integer. Error behaviour is identical to that of the component-specific setters except that the check for conflict with the existing path is that setting all three would not be in conflict with the path shape.</p>
 
 <div class="feature">
   <span class="category"><code>(srfi :275 iri)</code><br>procedure</span>
   <code class="signature">(<a href="#update-iri-query" id="update-iri-query">update-iri-query</a> <var>iri</var> <var>obj</var>)</code><br>
   <code class="signature">(<a href="#update-iri-fragment" id="update-iri-fragment">update-iri-fragment</a> <var>iri</var> <var>obj</var>)</code><br>
 </div>
-<p>Persistent setters for the query and fragment components of an IRI. Error behaviour is identical to <code>update-uri-user</code>, except that there is no check that these are in conflict with the path shape. Examples:</p>
+<p>Persistent setters for the query and fragment components of an IRI. Error behaviour is identical to that of <code>update-uri-user</code>, except that there is no check that these are in conflict with the path shape. Examples:</p>
 <pre>
 (define example0 (string->iri "urn:/some/where/place"))
 (define example1 (string->iri "http://example.org?query"))
@@ -774,7 +774,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#iri=?" id="iri=?">iri=?</a> <var>iri1</var> <var>iri2</var> <var>iri3</var> &hellip;)</code><br>
 </div>
 
-<p>Returns <code>#t</code> if all objects have components which are all equal. A non-relative IRI is not equal to a relative reference and vice versa as relative references have no scheme component. For components other than path and port, two components are only equal if they encode the same sequence of characters and percent-encoded bytes exactly. Two port components are equal if <code>eq?</code> holds between them, and two path components are equal if <a href="#path=?"><code>path=?</code></a> holds. Returns <code>#f</code> otherwise.</p>
+<p>Returns <code>#t</code> if all objects have components which are all equal. A non-relative IRI is not equal to a relative reference, and vice versa, as relative references have no scheme component. For components other than path and port, two components are only equal if they encode the same sequence of characters and percent-encoded bytes exactly. Two port components are equal if <code>eq?</code> holds between them, and two path components are equal if <a href="#path=?"><code>path=?</code></a> holds. Returns <code>#f</code> otherwise.</p>
 <p>Examples:</p>
 <pre>
 (define example0 (string->iri "/some/where/place")
@@ -864,7 +864,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <span class="category"><code>(srfi :275 normalize)</code><br>procedure</span>
   <code class="signature">(<a href="#relativize-iri" id="relativize-iri">relativize-iri</a> <var>base</var> <var>non-relative-iri</var>)</code><br>
 </div>
-<p>The inverse of <code>resolve-iri</code>, which elicits a relative reference which is resolveable against <var>base</var> in order to produce <var>non-relative-iri</var>. It is not possible to elicit a path for which <a href="#rfc3987-path-abempty?"><code>rfc3987-path-abempty?</code></a> does not hold after calling <a href="#remove-dot-segments">remove-dot-segments</a> for either argument, and an error is raised with the normalized path and respective argument as irritants. An assertion violation is raised if <var>base</var> is not a non-relative IRI. The argument order is consistent with <code>resolve-iri</code>, compared to Chicken&rsquo;s <code>relative-from</code> procedure <a href="#chicken-uri-generic">[7]</a> where it is flipped.</p>
+<p>The inverse of <code>resolve-iri</code>, which elicits a relative reference which is resolvable against <var>base</var> in order to produce <var>non-relative-iri</var>. It is not possible to elicit a path for which <a href="#rfc3987-path-abempty?"><code>rfc3987-path-abempty?</code></a> does not hold after calling <a href="#remove-dot-segments">remove-dot-segments</a> for either argument, and an error is raised with the normalized path and respective argument as irritants. An assertion violation is raised if <var>base</var> is not a non-relative IRI. The argument order is consistent with <code>resolve-iri</code>, compared to Chicken&rsquo;s <code>relative-from</code> procedure <a href="#chicken-uri-generic">[7]</a> where it is flipped.</p>
 <p>Examples:</p>
 <pre>
 (define base-iri   (string->iri "http://a/bb/ccc/d;p?q"))
@@ -906,7 +906,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <span class="category"><code>(srfi :275 normalize)</code><br>procedure</span>
   <code class="signature">(<a href="#normalize-iri-escape" id="normalize-iri-escape">normalize-iri-escape</a> <var>iri</var>)</code><br>
 </div>
-<p>Normalize an IRI&rsquo;s escapes, potentially interpreting percent-encoded bytes if part of valid UTF-8 octet sequences as characters. Conversely, characters which are not permissible within an IRI component will appear as series of percent-encoded bytes corresponding to UTF-8 octets. This procedure is idempotent: a fully normalized IRI will be normalized to itself, and <code>iri=?</code> will hold true between the two.</p>
+<p>Normalize an IRI&rsquo;s escapes, potentially interpreting percent-encoded bytes, if part of valid UTF-8 octet sequences, as characters. Conversely, characters which are not permissible within an IRI component will appear as series of percent-encoded bytes corresponding to UTF-8 octets. This procedure is idempotent: a fully normalized IRI will be normalized to itself, and <code>iri=?</code> will hold true between the two.</p>
 <p>Examples (see <a href="#test-iri-escape-normalization">escape normalization test cases</a>):</p>
 <pre>
 (normalize-iri-escape (string->iri "http://crepes.example.org/in/Rennes?Dim.%E2%80%A5Sam."))
@@ -1047,7 +1047,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#get-rfc3987-absolute-iri-2" id="get-rfc3987-absolute-iri-2">get-rfc3987-absolute-iri</a> <var>port</var> <var>obj</var>)</code><br>
 </div>
 
-<p>These procedures are the equivalent of the string parsing procedures immediately above, but which parse a stream of text from a port as an IRI. These procedures stop if the port produces a character or the EOF object which is <code>eq?</code> with optional datum <var>obj</var>, returning the IRI and with the current port position just before that of <code>obj</code>. These procedures raise an assertion violation if <var>port</var> is not a <i>textual</i> input port, and the parse behaviour is identical to the equivalent string procedures except that the position irritant is the equivalent port position.</p>
+<p>These procedures are the equivalent of the string parsing procedures immediately above, but which parse a stream of text from a port as an IRI. These procedures stop if the port produces a character or the EOF object which is <code>eq?</code> with optional datum <var>obj</var>, returning the IRI and with the current port position just before that of <code>obj</code>. These procedures raise an assertion violation if <var>port</var> is not a <i>textual</i> input port, and the parse behaviour is identical to that of the equivalent string procedures except that the position irritant is the equivalent port position.</p>
 <p>These low-level procedures are offered because they can be used directly in streaming parsers for data which contains IRIs, such as JSON-LD <a href="#json-ld11">[5]</a>. An example of this in practice is as follows:</p>
 <pre>
 (define port0 (open-string-input-port "urn:/some/where/place"))
@@ -1130,13 +1130,13 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <span class="category"><code>(srfi :275 path)</code><br>procedure</span>
   <code class="signature">(<a href="#rfc3987-path-rootless?" id="rfc3987-path-rootless?">rfc3987-path-rootless?</a> <var>obj</var>)</code><br>
 </div>
-<p>Returns <code>#t</code> if <var>obj</var> is a relative path with at least one, non-empty segment. Returns <code>#f</code> otherwise.</p>
+<p>Returns <code>#t</code> if <var>obj</var> is a relative path with at least one non-empty segment. Returns <code>#f</code> otherwise.</p>
 
 <div class="feature">
   <span class="category"><code>(srfi :275 path)</code><br>procedure</span>
   <code class="signature">(<a href="#rfc3987-path-noscheme?" id="rfc3987-path-noscheme?">rfc3987-path-noscheme?</a> <var>obj</var>)</code><br>
 </div>
-<p>Returns <code>#t</code> if <var>obj</var> is a relative path with at least one, non-empty segment, with the additional condition that the initial segment does not contain a plain (unescaped) colon character. Returns <code>#f</code> otherwise.</p>
+<p>Returns <code>#t</code> if <var>obj</var> is a relative path with at least one non-empty segment, with the additional condition that the initial segment does not contain a plain (unescaped) colon character. Returns <code>#f</code> otherwise.</p>
 
 <div class="feature">
   <span class="category"><code>(srfi :275 path)</code><br>procedure</span>
@@ -1302,7 +1302,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#string-%3Erelative-path" id="string-%3Erelative-path">string->relative-path</a> <var>string</var>)</code><br>
   <code class="signature">(<a href="#string-%3Erelative-path-2" id="string-%3Erelative-path-2">string->relative-path</a> <var>string</var> <var>noscheme?</var>)</code><br>
 </div>
-<p>Convert <var>string</var> to a relative path. If the optional <var>noscheme?</var> argument is not <code>#f</code>, and the first segment contains a colon character, then the path output will be prefixed with <code>./</code>. An error is raised with the <var>string</var> as irritant if it has a leading slash. Error behaviour is otherwise identical to <code>string->path</code>. Examples:</p>
+<p>Convert <var>string</var> to a relative path. If the optional <var>noscheme?</var> argument is not <code>#f</code>, and the first segment contains a colon character, then the path output will be prefixed with <code>./</code>. An error is raised with the <var>string</var> as irritant if it has a leading slash. Error behaviour is otherwise identical to that of <code>string->path</code>. Examples:</p>
 <pre>
 (path->string (string->relative-path "some/where/place")) &rarr; "some/where/place"
 (path->string (string->relative-path "some:where/place/else")) &rarr; "some:where/place/else"
@@ -1316,7 +1316,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#string-%3Eabsolute-path-2" id="string-%3Eabsolute-path-2">string->absolute-path</a> <var>string</var> <var>nonempty-init?</var>)</code><br>
 </div>
 
-<p>Convert <var>string</var> to an absolute path. If the optional <var>nonempty-init?</var> argument is not <code>#f</code>, and the initial segment is empty (leading double slash), then an error is raised with irritant <var>string</var>. Error behaviour is otherwise identical to <code>string->path</code>. Examples:</p>
+<p>Convert <var>string</var> to an absolute path. If the optional <var>nonempty-init?</var> argument is not <code>#f</code>, and the initial segment is empty (leading double slash), then an error is raised with irritant <var>string</var>. Error behaviour is otherwise identical to that of <code>string->path</code>. Examples:</p>
 <pre>
 (path->string (string->absolute-path "/some/where/place")) &rarr; "/some/where/place"
 (path->string (string->absolute-path "//some/where/place")) &rarr; "//some/where/place"
@@ -1329,7 +1329,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#list-%3Erelative-path" id="list-%3Erelative-path">list->relative-path</a> <var>pair</var>)</code><br>
   <code class="signature">(<a href="#list-%3Erelative-path-2" id="list-%3Erelative-path-2">list->relative-path</a> <var>pair</var> <var>noscheme?</var>)</code><br>
 </div>
-<p>Convert a list of string segments to a relative path. This procedure behaves similarly to <a href="#string-%3Erelative-path"><code>string->relative-path</code></a> with the exception that that slashes are always escaped, so a slash at the start of the first segment does not raise an error. An error is raised if a segment is not a string, with the segment, its position, and <var>pair</var> as irritants, and if the initial segment is empty (serialized as leading slash), then an error is raised with the (string) segment, its position, and <var>pair</var> as irritants. An assertion violation is raised if <var>pair</var> is not a proper list.</p>
+<p>Convert a list of string segments to a relative path. This procedure behaves similarly to <a href="#string-%3Erelative-path"><code>string->relative-path</code></a> with the exception that slashes are always escaped, so a slash at the start of the first segment does not raise an error. An error is raised if a segment is not a string, with the segment, its position, and <var>pair</var> as irritants, and if the initial segment is empty (serialized as leading slash), then an error is raised with the (string) segment, its position, and <var>pair</var> as irritants. An assertion violation is raised if <var>pair</var> is not a proper list.</p>
 <p>Examples:</p>
 <pre>
 (path-segments (list->relative-path '("some" "where" "place"))) &rarr; ("some" "where" "place")
@@ -1342,7 +1342,7 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#list-%3Eabsolute-path" id="list-%3Eabsolute-path">list->absolute-path</a> <var>pair</var>)</code><br>
   <code class="signature">(<a href="#list-%3Eabsolute-path-2" id="list-%3Eabsolute-path-2">list->absolute-path</a> <var>pair</var> <var>nonempty-init?</var>)</code><br>
 </div>
-<p>Convert a list of string segments to an absolute path. This procedure behaves similarly to <a href="#string-%3Eabsolute-path"><code>string->absolute-path</code></a> with the exception that that slashes are always escaped, so a slash at the start of the first segment does not raise an error. An error is raised if a segment is not a string, with the segment, its position, and <var>pair</var> as irritants. An assertion violation is raised if <var>pair</var> is not a proper list.</p>
+<p>Convert a list of string segments to an absolute path. This procedure behaves similarly to <a href="#string-%3Eabsolute-path"><code>string->absolute-path</code></a> with the exception that slashes are always escaped, so a slash at the start of the first segment does not raise an error. An error is raised if a segment is not a string, with the segment, its position, and <var>pair</var> as irritants. An assertion violation is raised if <var>pair</var> is not a proper list.</p>
 <p>Examples:</p>
 <pre>
 (path-segments (list->absolute-path '("some" "where" "place"))) &rarr; ("some" "where" "place")
@@ -1436,14 +1436,14 @@ example-IRI &rarr; &lt;http://example.org:80/ex#IRI&gt;
   <code class="signature">(<a href="#host-settable?" id="host-settable?">host-settable?</a> <var>ident</var> <var>obj</var>)</code><br>
   <code class="signature">(<a href="#port-settable?" id="port-settable?">port-settable?</a> <var>ident</var> <var>obj</var>)</code><br>
 </div>
-<p>Helper procedures which return <code>#t</code> providing that updating the respective component of IRI or URI <var>ident</var> to <var>obj</var> is legal. Returns <code>#f</code> otherwise. An assertion violation is raised with <code>ident</code> as irritant if it is not an IRI or URI.</p>
+<p>Helper procedures which return <code>#t</code> providing that updating the respective component of IRI or URI <var>ident</var> to <var>obj</var> is legal. Return <code>#f</code> otherwise. An assertion violation is raised with <code>ident</code> as irritant if it is not an IRI or URI.</p>
 <p>These procedures are provided as the conditions imposed by RFC 3986 and 3987 are somewhat elaborate with respect to path shape, and are described in the <a href="#error-behaviour-of-setters">error behaviour of setters</a> section. For efficiency, <code>obj</code> is <i>not</i> parsed and the only check is that it is not <code>#f</code>. This means that subsequent procedures called on these arguments may error.</p>
 
 <div class="feature">
   <span class="category"><code>(srfi :275 utils)</code><br>procedure</span>
   <code class="signature">(<a href="#path-settable?" id="path-settable?">path-settable?</a> <var>ident</var> <var>path</var>)</code><br>
 </div>
-<p>Returns <code>#t</code> providing that updating the path component of IRI or URI <var>ident</var> to <var>path</var> is legal, given the existing authority components. Returns <code>#f</code> otherwise. The conditions are described in the <a href="#error-behaviour-of-setters">error behaviour of setters</a> section. An assertion violation is raised with <code>ident</code> as irritant if it is not an IRI or URI.</p>
+<p>Returns <code>#t</code> providing that updating the path component of IRI or URI <var>ident</var> to <var>path</var> is legal, given the existing authority components. Return <code>#f</code> otherwise. The conditions are described in the <a href="#error-behaviour-of-setters">error behaviour of setters</a> section. An assertion violation is raised with <code>ident</code> as irritant if it is not an IRI or URI.</p>
 
 <h3 id="character-sets">Character sets</h3>
 <p>The following section describes SRFI 14 character sets <a href="#srfi-14">[14]</a>. Note that <code>(srfi :275 iri)</code> and <code>(srfi :275 uri)</code> export some of the same identifiers where the set of characters is the same in RFC 3986 and 3987: e.g. <code>char-set:reserved</code>. Character sets are named for the RFC 3986 and 3987 ABNF productions, e.g. <code>char-set:uri-userinfo</code>.</p>
