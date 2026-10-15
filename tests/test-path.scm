@@ -1,3 +1,7 @@
+; SPDX-FileCopyrightText: 2026 Duncan Guthrie
+;
+; SPDX-License-Identifier: MIT
+
 #!r6rs
 
 (test-begin "path definitions")
